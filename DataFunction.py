@@ -19,7 +19,7 @@ def generateData(path):
     CostInvestment = pd.read_excel(Data,"CostInvestment")
     Yield = pd.read_excel(Data,"Yield")
     Parameters = pd.read_excel(Data,"CostParameters")
-    
+    print(Parameters)
     ## ProductInches including the uncertainty for TV screensize
     probability = [0.25,0.5,0.25] # same for all uncertain bandwiths
     outcome = [-2,0,1]
