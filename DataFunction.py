@@ -9,7 +9,7 @@ def generateData(path):
     import pandas as pd
     import statistics as st
     import math 
-
+    
     Data = pd.ExcelFile(path)
     
     ProductSize = pd.read_excel(Data,"ProductSize")
@@ -27,9 +27,9 @@ def generateData(path):
     M = np.zeros((len(ProductSize),5))
     ProductInches = pd.DataFrame(M,index = ProductSize.Format)
     
-    for i in range(6):
+    for i in range(5): ## SDTV was assumed als certain, maar is ook uncertain.
         ProductInches.values[i,0] = ProductSize.values[i,0]
-    for j in range(6,12):
+    for j in range(5,12):
         ProductInches.values[j,0] = ProductSize.values[j,0] + np.random.choice(outcome,1,probability)
     
     for i in range(9,12):
