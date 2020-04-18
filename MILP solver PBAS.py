@@ -55,16 +55,17 @@ ApS = {s: {p: W[p,s]*H[p,s] for p in range(Products)} for s in range(Scenarios)}
 for t in range(Time):
     m.addConstr(quicksum(x[p,t] for p in range(Products)) <= Data[0]['MaxCapacity']*12,name='Yearly Substrate Capacity')
 
-for p in range(Products):
-    for t in range(Time):
-        for s in range(Scenarios):
-            m.addQConstr(Profit[p,t,s] == (Data[s]['ProductPrice'].values[p,t]*Data[s]['Yield'].values[p,t]*ApS[s][p])-(Data[s]['SubstrateCost'].values[0,t]*(w*h)),name='Profit per substrate for each product')
+#for p in range(Products):
+#    for t in range(Time):
+#        for s in range(Scenarios):
+#            m.addQConstr(Profit[p,t,s] == (Data[s]['ProductPrice'].values[p,t]*Data[s]['Yield'].values[p,t]*ApS[s][p])-(Data[s]['SubstrateCost'].values[0,t]*(w*h)),name='Profit per substrate for each product')
 
+Profit = {s: {p: {t: (Data[s]['ProductPrice'].values[p,t]*Data[s]['Yield'].values[p,t]*ApS[s][p])-(Data[s]['SubstrateCost'].values[0,t]*(w*h)) for t in range(Time) } for p in range(Products)} for s in range(Scenarios)}
 ## OBJECTIVE
 
 
 obj = gb.LinExpr()
-obj = quicksum(quicksum(quicksum(Profit[p,t,s]*x[p,t] for s in range(Scenarios)) for t in range(Time)) for p in range(Products))
+obj = quicksum(quicksum(quicksum(Profit[s][p][t]*x[p,t] for s in range(Scenarios)) for t in range(Time)) for p in range(Products))
 
 m.setObjective(obj, gb.GRB.MAXIMIZE)
 
