@@ -15,6 +15,9 @@ def generateData(path):
     ProductSize = pd.read_excel(Data,"ProductSize")
     ProductFormat = pd.read_excel(Data,"ProductFormat")
     Price = pd.read_excel(Data,"Price")
+    a = b
+    c = d
+    
     CostSubstrate = pd.read_excel(Data,"CostSubstrate")
     CostInvestment = pd.read_excel(Data,"CostInvestment")
     Yield = pd.read_excel(Data,"Yield")
