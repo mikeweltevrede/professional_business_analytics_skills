@@ -9,7 +9,7 @@ def generateData(path):
     import pandas as pd
     import statistics as st
     import math 
-    
+
     Data = pd.ExcelFile(path)
     
     ProductSize = pd.read_excel(Data,"ProductSize")
@@ -20,7 +20,7 @@ def generateData(path):
     CostInvestment = pd.read_excel(Data,"CostInvestment")
     Yield = pd.read_excel(Data,"Yield")
     Parameters = pd.read_excel(Data,"CostParameters")
-    print(Parameters)
+
     ## ProductInches including the uncertainty for TV screensize
     probability = [0.25,0.5,0.25] # same for all uncertain bandwiths
     outcome = [-2,0,1]
@@ -66,7 +66,7 @@ def generateData(path):
     ## Investment Cost over time including the uncertainty
     ## Plus or minus 10% so use same outcome as for the cost substrate
     CostInvestment2 = pd.DataFrame(np.zeros((1,len(CostInvestment.columns[3:18]))), columns = CostInvestment.columns[3:18])
-    for i in range(len(CostInvestment.columns[3:18])):
+    for i in range(3):
         CostInvestment2.values[0,i] = np.random.choice(outcome3,1,probability) * CostInvestment.values[0,i+3]
     
     ## Yield per market over time including the uncertainty
@@ -81,7 +81,23 @@ def generateData(path):
 
     for j in range(2,len(Yield.columns[3:18])):
         Yield2.values[5:len(ProductInches),j] = np.random.choice(outcome4,1,probability) * Yield.values[2,j+3]
-           
+    
+    ## Depreciation
+    Time = len(Price2.columns)
+    FirstInvest = np.zeros((1,Time))
+    for t in range(10):
+        FirstInvest[0,t] = (CostInvestment2.values[0,0]/10)
+    SecondInvest = np.zeros((1,Time))
+    for t in range(1,11):
+        SecondInvest[0,t] = (CostInvestment2.values[0,1]/10)
+    ThirdInvest = np.zeros((1,Time))
+    for t in range(2,12):
+        ThirdInvest[0,t] = (CostInvestment2.values[0,2]/10)    
+    
+    Depreciation = pd.DataFrame(np.zeros((1,Time)), columns = Yield.columns[3:18])
+    for t in range(Time):
+        Depreciation.values[0,t]= (FirstInvest[0,t] + SecondInvest[0,t] + ThirdInvest[0,t])*1000000
+       
     MaxCapacity = Parameters.values[0,3]
     RD = np.random.choice([0.04,0.05,0.11],1,probability) ## R&D
     SGA = np.random.choice([0.03,0.04,0.05],1,probability) ##SG&A
@@ -109,5 +125,6 @@ def generateData(path):
             "TaxRate": TaxRate.item(),
             "DPO":DPO.item(),
             "DSO":DSO.item(),
-            "DIO":DIO.item()}
+            "DIO":DIO.item(),
+            "Depreciation":Depreciation}
     
