@@ -3,14 +3,14 @@
 GROUP 6 PBAS
 Data import file, incl randomness.
 """
-def generateData(path):
+
+def generateData(Data):
 
     import numpy as np
     import pandas as pd
     import statistics as st
     import math 
 
-    Data = pd.ExcelFile(path)
     
     ProductSize = pd.read_excel(Data,"ProductSize")
     ProductFormat = pd.read_excel(Data,"ProductFormat")
@@ -67,7 +67,7 @@ def generateData(path):
     ## Plus or minus 10% so use same outcome as for the cost substrate
     CostInvestment2 = pd.DataFrame(np.zeros((1,len(CostInvestment.columns[3:18]))), columns = CostInvestment.columns[3:18])
     for i in range(3):
-        CostInvestment2.values[0,i] = np.random.choice(outcome3,1,probability) * CostInvestment.values[0,i+3]
+        CostInvestment2.values[0,i] = np.random.choice(outcome3,1,probability) * CostInvestment.values[0,i+3]*1000000
     
     ## Yield per market over time including the uncertainty
     outcome4 = [0.85,1,1.02] ## 15% down or 2% up   
@@ -96,7 +96,7 @@ def generateData(path):
     
     Depreciation = pd.DataFrame(np.zeros((1,Time)), columns = Yield.columns[3:18])
     for t in range(Time):
-        Depreciation.values[0,t]= (FirstInvest[0,t] + SecondInvest[0,t] + ThirdInvest[0,t])*1000000
+        Depreciation.values[0,t]= (FirstInvest[0,t] + SecondInvest[0,t] + ThirdInvest[0,t])
        
     MaxCapacity = Parameters.values[0,3]
     RD = np.random.choice([0.04,0.05,0.11],1,probability) ## R&D
