@@ -21,7 +21,7 @@ height = np.array([1.55-0.05*i for i in range(n_height)])
 start_time = time.time()
 Data = {}
 for i in range(Scenarios):
-    Data[i] = generateData("DataPBAS.xlsx")
+    Data[i] = generateData("data/DataPBAS.xlsx")
 
 print(f"Data generation took {time.time()-start_time} seconds")
 
