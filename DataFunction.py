@@ -3,14 +3,13 @@
 GROUP 6 PBAS
 Data import file, incl randomness.
 """
-
+import numpy as np
+import pandas as pd
+import statistics as st
+import math 
+    
 def generateData(path):
 
-    import numpy as np
-    import pandas as pd
-    import statistics as st
-    import math 
-    path = "DataPBAS.xlsx"
     Data = pd.ExcelFile(path)
     ProductSize = pd.read_excel(Data,"ProductSize")
     ProductFormat = pd.read_excel(Data,"ProductFormat")
