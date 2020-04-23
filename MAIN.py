@@ -34,4 +34,4 @@ for w in range(len(width)):
         NPV_ = NPV_SAA(Data, width[w], height[h])
         NPV.values[h, w] = NPV_['Average NPV']
 
-NPV.to_csv('NPV Table.csv')
+NPV.to_csv('output/NPV Table.csv')
