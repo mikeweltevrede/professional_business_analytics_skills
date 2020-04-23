@@ -4,14 +4,14 @@ GROUP 6 PBAS
 Data import file, incl randomness.
 """
 
-def generateData(Data):
+def generateData(path):
 
     import numpy as np
     import pandas as pd
     import statistics as st
     import math 
-
-    
+    path = "DataPBAS.xlsx"
+    Data = pd.ExcelFile(path)
     ProductSize = pd.read_excel(Data,"ProductSize")
     ProductFormat = pd.read_excel(Data,"ProductFormat")
     Price = pd.read_excel(Data,"Price")
@@ -98,11 +98,11 @@ def generateData(Data):
     for t in range(Time):
         Depreciation.values[0,t]= (FirstInvest[0,t] + SecondInvest[0,t] + ThirdInvest[0,t])
        
-    MaxCapacity = Parameters.values[0,3]
+    MaxCapacity = Parameters.values[0,2]
     RD = np.random.choice([0.04,0.05,0.11],1,probability) ## R&D
     SGA = np.random.choice([0.03,0.04,0.05],1,probability) ##SG&A
-    WACC = Parameters.values[3,3]
-    Depreciation_years = Parameters.values[4,3]
+    WACC = Parameters.values[3,2]
+    Depreciation_years = Parameters.values[4,2]
     maximum_width = 1.55
     maximum_height = 1.85
     TaxRate = np.random.choice([0.20,0.25,0.30],1,probability)

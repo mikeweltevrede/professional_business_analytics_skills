@@ -6,20 +6,24 @@ PBAS
 import gurobipy as gb
 from gurobipy import quicksum   
 from DataFunction import generateData
+from NPVFunction import NPV_SAA
 import numpy as np
+import pandas as pd
+import time
 
-Scenarios = 2
-w = 1.799
-h = 1.348
+Scenarios = 10
 
-
+start_time = time.time()
 Data = {}
 for i in range(Scenarios):
     Data[i] = generateData("DataPBAS.xlsx")
-    
+ 
+end_time = time.time()    
 Products = len(Data[0]['ProductSize'])
 Time = len(Data[0]['ProductPrice'].columns)
 
+w = 1.85
+h = 1.55
 
 W = np.zeros((Products,Scenarios))
 H = np.zeros((Products,Scenarios))
@@ -42,8 +46,10 @@ CostofSales = m.addVars(Scenarios, Time, vtype=gb.GRB.CONTINUOUS, name = 'Cost o
 NI = m.addVars(Scenarios, Time,vtype=gb.GRB.CONTINUOUS, name = 'Net Income')
 NCF = m.addVars(Scenarios, Time,vtype=gb.GRB.CONTINUOUS, name = 'Net Cash Flow')
 NPV = m.addVars(Scenarios,Time,vtype=gb.GRB.CONTINUOUS, name = 'Net Present Value')
-
-
+CCC = m.addVars(Scenarios,vtype=gb.GRB.CONTINUOUS, name = 'Cash Conversion Cycle')
+WC = m.addVars(Scenarios,Time,vtype=gb.GRB.CONTINUOUS, name = 'Working Capital')
+DWC = m.addVars(Scenarios,Time,vtype=gb.GRB.CONTINUOUS, name = 'Delta Working Capital')
+NPVperScenario = m.addVars(Scenarios,vtype=gb.GRB.CONTINUOUS, name = 'NPV per Scenario')
 
 ApS = {s: {p: W[p,s]*H[p,s] for p in range(Products)} for s in range(Scenarios)}        
 
@@ -59,7 +65,7 @@ for s in range(Scenarios):
 for s in range(Scenarios):
     for t in range(Time):         
         m.addConstr(CostofSales[s,t] == quicksum(Data[s]['SubstrateCost'].values[0,t]*(w*h)*x[p,t]    for p in range(Products)) + Data[s]['Depreciation'].values[0,t],name='Cost of Sales constraint')
-# + Data[s]['Depreciation'].values[0,t]
+
 for s in range(Scenarios):
     for t in range(Time):
         GM[s,t] = Sales[s,t]-CostofSales[s,t]
@@ -71,15 +77,29 @@ for s in range(Scenarios):
 for s in range(Scenarios):
     for t in range(Time):
         NI[s,t] = (1-Data[s]['TaxRate'])*OM[s,t]
-        
+
+for s in range(Scenarios):
+    CCC[s] = (Data[s]['DIO']+Data[s]['DSO']-Data[s]['DPO'])/365
+
+for s in range(Scenarios):
+    for t in range(Time):
+        WC[s,t] = Sales[s,t]*CCC[s]
+
+for s in range(Scenarios):
+    for t in range(1,Time):
+        DWC[s,0] = WC[s,0]
+        DWC[s,t] = WC[s,t-1]-WC[s,t]
+                
 for s in range(Scenarios): ## DWC moet er nog bij.
     for t in range(Time):
-        NCF[s,t] = NI[s,t] + Data[s]['Depreciation'].values[0,t] - Data[s]['InvestmentCost'].values[0,t]
+        NCF[s,t] = NI[s,t] + Data[s]['Depreciation'].values[0,t] - DWC[s,t] - Data[s]['InvestmentCost'].values[0,t]
 
 for s in range(Scenarios): 
     for t in range(Time):
         NPV[s,t] = NCF[s,t]/((1+Data[s]['WACC'])**t)
 
+for s in range(Scenarios):
+    NPVperScenario[s] = quicksum(NPV[s,t] for t in range(Time))
 
 
 
@@ -92,15 +112,19 @@ m.setObjective(obj, gb.GRB.MAXIMIZE)
 
 m.optimize()
 
-for var in [CostofSales]:
+for var in [x]:
     for k in var:
         if var[k].x != 0:
             print(k,var[k].x)
 
 for t in range(Time):
-    print(t)
-    print('NPV:%g' %NPV[0,t].getValue())
-    print('GM:%g' %GM[0,t].getValue())
-    print('OM:%g' %OM[0,t].getValue())
-    print('NI:%g' %NI[0,t].getValue())
-    print('NCF:%g' %NCF[0,t].getValue())
+    print(t)    
+    print('GM:%g' %sum(GM[s,t] for s in range(Scenarios)).getValue())
+    print('OM:%g' %sum(OM[s,t] for s in range(Scenarios)).getValue())
+    print('NI:%g' %sum(NI[s,t] for s in range(Scenarios)).getValue())
+    print('NCF:%g' %sum(NCF[s,t] for s in range(Scenarios)).getValue())
+    print('NPV:%g' %sum(NPV[s,t] for s in range(Scenarios)).getValue())
+
+for s in range(Scenarios):
+    print(s)
+    print('NPV per Scenario:%g' %NPVperScenario[s].getValue())
