@@ -22,8 +22,8 @@ end_time = time.time()
 Products = len(Data[0]['ProductSize'])
 Time = len(Data[0]['ProductPrice'].columns)
 
-w = 1.85
-h = 1.55
+# w = 1.85
+# h = 1.55
 
 W = np.zeros((Products,Scenarios))
 H = np.zeros((Products,Scenarios))
