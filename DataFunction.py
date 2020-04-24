@@ -10,7 +10,7 @@ def generateData(path):
     import pandas as pd
     import statistics as st
     import math 
-    path = "DataPBAS.xlsx"
+    #path = "DataPBAS.xlsx"
     Data = pd.ExcelFile(path)
     ProductSize = pd.read_excel(Data,"ProductSize")
     ProductFormat = pd.read_excel(Data,"ProductFormat")
@@ -44,8 +44,8 @@ def generateData(path):
     ProductInches.values[0,1] = math.atan(ProductFormat.values[0,7]/ProductFormat.values[1,7])
     
     for i in range(12):
-        ProductInches.values[i,2]= (math.cos(ProductInches.values[i,1])*ProductInches.values[i,0]*0.0254)+(ProductSize.values[i,3]/1000)
-        ProductInches.values[i,3]= (math.sin(ProductInches.values[i,1])*ProductInches.values[i,0]*0.0254)+(ProductSize.values[i,4]/1000)
+        ProductInches.values[i,2]= (math.cos(ProductInches.values[i,1])*ProductInches.values[i,0]*0.0254)+2*(ProductSize.values[i,3]/1000)
+        ProductInches.values[i,3]= (math.sin(ProductInches.values[i,1])*ProductInches.values[i,0]*0.0254)+2*(ProductSize.values[i,4]/1000)
         ProductInches.values[i,4] = ProductSize.values[i,5]/1000
         
     ProductInches = ProductInches.rename(columns = {4:'Exclusion (m)',0:'Diagonal (inches)',1:'Angle',2:'Height (m)',3:'Width (m)'})
