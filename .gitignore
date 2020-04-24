@@ -1,6 +1,5 @@
-data/
+__pycache__/
 Logo/
 Project Plan/
 Scoping & Acquisition/
 Slides/
-
