@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Apr 21 12:05:05 2020
-PBAS function for Expected value NPV by using SAA(Sample Average Approximation)
+PBAS function for Expected value NPV by using SAA(Sample Average Approximation) Scenario 1
 """
 
 import gurobipy as gb
@@ -101,12 +101,19 @@ def NPV_SAA(Data, w, h):
     # OBJECTIVE
 
     obj = gb.LinExpr()
+
     obj = (1/Scenarios)*quicksum(quicksum(NPV[s, t] for s in range(Scenarios))for t in range(Time))
-
+    
     m.setObjective(obj, gb.GRB.MAXIMIZE)
-
+    
     m.optimize()
-
-    return {'Average NPV': obj.getValue(),
-            'Width': w,
-            'Height': h}
+    
+    NegativeScenario = 0
+    for s in range(Scenarios):
+        if NPVperScenario[s].getValue() <= 0:
+           NegativeScenario = NegativeScenario + 1
+    
+    return {'Average NPV' :obj.getValue(),
+            'Width' :w,
+            'Height':h,
+            '#NegativeScenarios':NegativeScenario}

@@ -3,13 +3,13 @@
 GROUP 6 PBAS
 Data import file, incl randomness.
 """
-import numpy as np
-import pandas as pd
-import statistics as st
-import math
-
-
 def generateData(path):
+
+
+    import numpy as np
+    import pandas as pd
+    import statistics as st
+    import math 
 
     Data = pd.ExcelFile(path)
     ProductSize = pd.read_excel(Data, "ProductSize")
@@ -49,10 +49,10 @@ def generateData(path):
     for i in range(12):
         ProductInches.values[i, 2] = (math.cos(ProductInches.values[i, 1])
                                       * ProductInches.values[i, 0]*0.0254) +\
-            (ProductSize.values[i, 3]/1000)
+            2*(ProductSize.values[i, 3]/1000)
         ProductInches.values[i, 3] = (math.sin(ProductInches.values[i, 1])
                                       * ProductInches.values[i, 0]*0.0254) +\
-            (ProductSize.values[i, 4]/1000)
+            2*(ProductSize.values[i, 4]/1000)
         ProductInches.values[i, 4] = ProductSize.values[i, 5]/1000
 
     ProductInches = ProductInches.rename(
