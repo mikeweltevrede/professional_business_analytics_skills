@@ -5,33 +5,28 @@ MAIN script
 """
 
 
-import time
 import numpy as np
 import pandas as pd
 from DataFunction import generateData
 from NPVFunction import NPV_SAA
 
 Scenarios = 10
-n_width = 18
-n_height = 12
+n_width = 5
+n_height = 5
 
-width = np.array([1.85-0.05*i for i in range(n_width)])
-height = np.array([1.55-0.05*i for i in range(n_height)])
+Data = {i: generateData("data/DataPBAS.xlsx") for i in range(Scenarios)}
 
-start_time = time.time()
-Data = {}
-for i in range(Scenarios):
-    Data[i] = generateData("data/DataPBAS.xlsx")
-
-print(f"Data generation took {time.time()-start_time} seconds")
+widths = [Data[0]['Max_width']-0.05*i for i in range(n_width)]
+heights = [Data[0]['Max_height']-0.05*i for i in range(n_height)]
 
 Products = len(Data[0]['ProductSize'])
 Time = len(Data[0]['ProductPrice'].columns)
 
-NPV = pd.DataFrame(np.zeros((n_height, n_width)), index=height, columns=width)
-for w in range(len(width)):
-    for h in range(len(height)):
-        NPV_ = NPV_SAA(Data, width[w], height[h])
-        NPV.values[h, w] = NPV_['Average NPV']
+NPV = pd.DataFrame(np.zeros((n_width, n_height)), index=widths,
+                   columns=heights)
+for w in range(n_width):
+    for h in range(n_height):
+        NPV_ = NPV_SAA(Data, widths[w], heights[h])
+        NPV.values[w, h] = NPV_['Average NPV']
 
 NPV.to_csv('output/NPV Table.csv')
