@@ -71,7 +71,7 @@ def generateData(path):
     bandwidths_investment = [0.9, 1, 1.1]
     CostInvestment = 10e6 * CostInvestment.iloc[:, 3:] * np.random.choice(
         bandwidths_investment, len(CostInvestment.columns[3:]), probability)
-    CostInvestment = CostInvestment.dropna(axis=1)
+    CostInvestment = CostInvestment.fillna(0)
 
     # Yield per market over time including the uncertainty
     bandwidths_yield = [0.85, 1, 1.02]  # 15% down or 2% up
@@ -108,8 +108,8 @@ def generateData(path):
             "SG&A": np.random.choice([0.03, 0.04, 0.05], 1, probability).item(),
             "WACC": Parameters.loc['WACC', 'Cost'],
             "Depreciation_years": depreciation_period,
-            "Max_width": 1.55,
-            "Max_height": 1.85,
+            "Max_width": 1.85,
+            "Max_height": 1.55,
             "TaxRate": np.random.choice([0.20, 0.25, 0.30], 1, probability).item(),
             "DPO": np.random.choice([35, 45, 55], 1, probability).item(),
             "DSO": np.random.choice([35, 45, 55], 1, probability).item(),
