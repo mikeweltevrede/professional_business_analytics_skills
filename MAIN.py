@@ -12,8 +12,8 @@ from DataFunction import generateData
 from NPVFunction import NPV_SAA
 
 Scenarios = 10
-n_width = 18
-n_height = 12
+n_width = 4
+n_height = 4
 
 width = np.array([1.85-0.05*i for i in range(n_width)])
 height = np.array([1.55-0.05*i for i in range(n_height)])

@@ -21,10 +21,8 @@ def NPV_SAA(Data, w, h):
     # CONSTRAINTS
     for p in range(Products):
         for s in range(Scenarios):
-            W[p, s] = np.floor(w/(Data[s]['ProductSize'].values[p, 3] +
-                                  Data[s]['ProductSize'].values[p, 4]))
-            H[p, s] = np.floor(h/(Data[s]['ProductSize'].values[p, 2] +
-                                  Data[s]['ProductSize'].values[p, 4]))
+            W[p, s] = np.floor(w/(Data[s]['ProductSize'].loc[p,'Width (m)']))
+            H[p, s] = np.floor(h/(Data[s]['ProductSize'].loc[p,'Height (m)']))
 
     m = gb.Model('PBAS')
 
