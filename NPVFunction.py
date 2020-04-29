@@ -7,6 +7,7 @@ PBAS function for Expected value NPV by using SAA (Sample Average Approximation)
 import gurobipy as gb
 from gurobipy import quicksum
 import numpy as np
+import collections
 
 
 def NPV_SAA(Data, w, h):
@@ -57,6 +58,7 @@ def NPV_SAA(Data, w, h):
     OM = m.addVars(Scenarios, Time, vtype=gb.GRB.CONTINUOUS, name='Operating Margin')
     Sales = m.addVars(Scenarios, Time, vtype=gb.GRB.CONTINUOUS, name='Sales')
     CostofSales = m.addVars(Scenarios, Time, vtype=gb.GRB.CONTINUOUS, name='Cost of Sales')
+    COS2 = m.addVars(Scenarios, Time, vtype=gb.GRB.CONTINUOUS, name='Cost of Sales without depreciation')
     NI = m.addVars(Scenarios, Time, vtype=gb.GRB.CONTINUOUS, name='Net Income')
     NCF = m.addVars(Scenarios, Time, vtype=gb.GRB.CONTINUOUS, name='Net Cash Flow')
     NPV = m.addVars(Scenarios, Time, vtype=gb.GRB.CONTINUOUS, name='Net Present Value')
@@ -80,6 +82,11 @@ def NPV_SAA(Data, w, h):
             m.addConstr(CostofSales[s, t] == quicksum(
                 Data[s]['SubstrateCost'].iloc[0, t]*(w*h)*x[p, t] for p in range(Products)) +
                 Data[s]['Depreciation'].iloc[0, t], name='Cost of Sales constraint')
+            
+            # Cost of sales without depreciation (needed for P&L)
+            m.addConstr(COS2[s, t] == quicksum(
+                Data[s]['SubstrateCost'].iloc[0, t]*(w*h)*x[p, t] for p in range(Products)), 
+                name='Cost of Sales without depreciation')
 
             GM[s, t] = Sales[s, t]-CostofSales[s, t]
             OM[s, t] = GM[s, t] - Sales[s, t]*(Data[s]['R&D']+Data[s]['SG&A'])
@@ -109,8 +116,22 @@ def NPV_SAA(Data, w, h):
     for s in range(Scenarios):
         if NPVperScenario[s].getValue() < 0:
             NegativeScenario = NegativeScenario + 1
-
+    
+    # ELEMENTS PROFIT AND LOSS STATEMENT
+    PL = collections.defaultdict(dict)
+    for t in range(Time):
+        PL[t]['SALES'] = ((1/Scenarios)*quicksum(Sales[s, t].X for s in range(Scenarios))).getValue()
+        PL[t]['COS'] = ((1/Scenarios)*quicksum(COS2[s, t].X for s in range(Scenarios))).getValue()
+        PL[t]['GM'] = ((1/Scenarios)*quicksum(GM[s, t].getValue() for s in range(Scenarios))).getValue()
+        PL[t]['RD'] = ((1/Scenarios)*quicksum(Data[s]['R&D'] for s in range(Scenarios))).getValue()
+        PL[t]['SG&A'] = ((1/Scenarios)*quicksum(Data[s]['SG&A'] for s in range(Scenarios))).getValue()
+        PL[t]['Depreciation'] = Data[s]['Depreciation'].iloc[0, t]
+        PL[t]['OM'] = ((1/Scenarios)*quicksum(OM[s, t].getValue() for s in range(Scenarios))).getValue()
+        PL[t]['TAX'] = ((1/Scenarios)*quicksum(Data[s]['TaxRate'] for s in range(Scenarios))).getValue()
+        PL[t]['NI'] = ((1/Scenarios)*quicksum(NI[s, t].getValue() for s in range(Scenarios))).getValue()
+        
     return {'Average NPV': obj.getValue(),
             'Width': w,
             'Height': h,
-            '#NegativeScenarios': NegativeScenario}
+            '#NegativeScenarios': NegativeScenario,
+            'PL': PL}
