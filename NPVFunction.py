@@ -9,7 +9,7 @@ from gurobipy import quicksum
 import numpy as np
 import collections
 
-def NPV_SAA(Data, w, h):
+def NPV_SAA(Data, h, w):
     
     Scenarios = len(Data)
     Products = len(Data[0]['ProductSize'])
