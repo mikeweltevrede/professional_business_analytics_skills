@@ -4,7 +4,7 @@ import numpy as np
 import collections
 
 
-def NPV_SAA(Data, h, w, option=1, product_thresholds=None):
+def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
 
     assert option in {1, 2, 3}, "Option should be 1, 2, or 3"
 
@@ -71,7 +71,9 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None):
 
     # INITIALIZE MODEL
     m = gb.Model('PBAS')
-
+    if not verbose:
+        m.setParam('OutputFlag', False)
+    
     # VARIABLES
     x = m.addVars(Products, Time, vtype=gb.GRB.INTEGER, lb=0,
                   name='Substrate per product over time')
@@ -177,8 +179,10 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None):
                                                for s in range(Scenarios))).getValue()
         PL[t]['WC'] = ((1/Scenarios)*quicksum(WC[s, t].getValue()
                                               for s in range(Scenarios))).getValue()
-        # PL[t]['Depreciation'] = Data[s]['Depreciation'].iloc[0, t] # TODO: Fix
-        # PL[t]['CAPEX'] = Data[s]['InvestmentCost'].iloc[0, t] # TODO: Fix
+        PL[t]['Depreciation'] = ((1/Scenarios)*quicksum(Data[s]['Depreciation'].iloc[0, t]
+                                                        for s in range(Scenarios))).getValue()
+        PL[t]['CAPEX'] = ((1/Scenarios)*quicksum(Data[s]['InvestmentCost'].iloc[0, t]
+                                                 for s in range(Scenarios))).getValue()
 
     return {'Average NPV': obj.getValue(),
             'Width': w,
