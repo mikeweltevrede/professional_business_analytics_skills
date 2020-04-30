@@ -8,7 +8,7 @@ import gurobipy as gb
 from gurobipy import quicksum
 import numpy as np
 import collections
-
+import pandas as pd
 def NPV_SAA(Data, w, h):
     
     Scenarios = len(Data)
@@ -121,11 +121,14 @@ def NPV_SAA(Data, w, h):
             
     ProductProduction = pd.DataFrame(np.zeros((Products,Time)), index = Data[0]['Yield']['Format'],
                                      columns =Data[0]['InvestmentCost'].columns)
-    
+    TotalProduction = pd.DataFrame(np.zeros((1,Time)), index = ['Total Production'], 
+                                   columns = Data[0]['InvestmentCost'].columns )
     for p in range(Products):
         for t in range(Time):
             ProductProduction.iloc[p, t] = x[p, t].x
-   
+    for t in range(Time):
+        TotalProduction.iloc[0, t] = quicksum(x[p, t].x for p in range(Products)).getValue()
+    Production = pd.concat([ProductProduction, TotalProduction])
     # ELEMENTS PROFIT AND LOSS STATEMENT
     PL = collections.defaultdict(dict)
     for t in range(Time):
@@ -144,4 +147,4 @@ def NPV_SAA(Data, w, h):
             'Height': h,
             '#NegativeScenarios': NegativeScenario,
             'PL': PL,
-            'ProductsProduction':ProductProduction}
+            'ProductsProduction':Production}
