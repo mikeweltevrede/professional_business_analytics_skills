@@ -9,11 +9,11 @@ from gurobipy import quicksum
 import numpy as np
 import collections
 
-
 def NPV_SAA(Data, w, h):
     
     Scenarios = len(Data)
     Products = len(Data[0]['ProductSize'])
+
     Time = len(Data[0]['ProductPrice'].columns) - 2
 
     # Products Per Substrate

@@ -66,10 +66,10 @@ def generateData(path):
     bandwidths_substrate_prices = [0.9, 1, 1.1]
     CostSubstrate = CostSubstrate.iloc[:, 3:] * np.random.choice(
         bandwidths_substrate_prices, len(CostSubstrate.columns[3:]), probability)
-
+    CostSubstrate = CostSubstrate.fillna(0)
     # Investment costs over time including the uncertainty
     bandwidths_investment = [0.9, 1, 1.1]
-    CostInvestment = 10e6 * CostInvestment.iloc[:, 3:] * np.random.choice(
+    CostInvestment = 1e6 * CostInvestment.iloc[:, 3:] * np.random.choice(
         bandwidths_investment, len(CostInvestment.columns[3:]), probability)
     CostInvestment = CostInvestment.fillna(0)
 
@@ -79,7 +79,7 @@ def generateData(path):
     Yield = pd.concat([Yield['Yieldpermarket'], Yield.iloc[:, 1:] * np.random.choice(
         bandwidths_yield, (Yield.shape[0], Yield.shape[1]-1), probability)], axis=1)
     Yield = pd.merge(ProductMeta, Yield, left_on='Market', right_on='Yieldpermarket', how='left')
-
+    Yield = Yield.fillna(0)
     # Depreciation over time
     Depreciation = {}
     depreciation_period = int(Parameters.loc['Depreciation years', 'Cost'])
