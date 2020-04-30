@@ -129,6 +129,9 @@ def NPV_SAA(Data, w, h):
         PL[t]['OM'] = ((1/Scenarios)*quicksum(OM[s, t].getValue() for s in range(Scenarios))).getValue()
         PL[t]['TAX'] = ((1/Scenarios)*quicksum(Data[s]['TaxRate'] for s in range(Scenarios))).getValue()
         PL[t]['NI'] = ((1/Scenarios)*quicksum(NI[s, t].getValue() for s in range(Scenarios))).getValue()
+        PL[t]['DWC'] = ((1/Scenarios)*quicksum(DWC[s, t].getValue() for s in range(Scenarios))).getValue()
+        PL[t]['WC'] = ((1/Scenarios)*quicksum(WC[s, t].getValue() for s in range(Scenarios))).getValue()
+        PL[t]['CAPEX'] = Data[s]['InvestmentCost'].iloc[0, t]
         
     return {'Average NPV': obj.getValue(),
             'Width': w,
