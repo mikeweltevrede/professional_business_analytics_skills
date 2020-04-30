@@ -32,19 +32,18 @@ def main(data_path, output_path=None, num_scenarios=10,  max_height=None, max_wi
     return NPV
 
 if __name__ == "__main__": # This means that running this script will run the function main() above
+    num_scenarios = 50
     
-    print("Starting on option 1")
+    # Option 1: Maximise profit
     NPV_s1 = main(data_path="data/DataPBAS.xlsx", output_path="output/NPV Table_option1.csv",
-                  num_scenarios=10)
+                  num_scenarios=num_scenarios)
     
-    print("Starting on option 2")
+    # Option 2: Each market should constitute at least a certain amount of the production
     NPV_s2 = main(data_path="data/DataPBAS.xlsx", output_path="output/NPV Table_option2.csv",
-                  num_scenarios=10, option=2,
-                  product_thresholds={key: 0.1 for key in ('notebooks', 'monitors', 'televisions')})
+                  num_scenarios=num_scenarios, option=2,
+                  product_thresholds={'notebooks': 0.1, 'monitors': 0.1, 'televisions': 0.1})
     
-    print("Starting on option 3")
-    # AttributeError: Unable to retrieve attribute 'x'
-    # line 155, in NPV_SAA -> if NPVperScenario[s].getValue() < 0:
+    # Option 3: Each product should constitute at least a certain amount of the production
     NPV_s3 = main(data_path="data/DataPBAS.xlsx", output_path="output/NPV Table_option3.csv",
-                  num_scenarios=10, option=3, product_thresholds=0.03)
+                  num_scenarios=num_scenarios, option=3, product_thresholds=0.03)
     
