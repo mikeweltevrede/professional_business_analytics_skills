@@ -10,6 +10,7 @@ import numpy as np
 import collections
 import pandas as pd
 def NPV_SAA(Data, w, h):
+
     
     Scenarios = len(Data)
     Products = len(Data[0]['ProductSize'])
@@ -125,9 +126,9 @@ def NPV_SAA(Data, w, h):
                                    columns = Data[0]['InvestmentCost'].columns )
     for p in range(Products):
         for t in range(Time):
-            ProductProduction.iloc[p, t] = x[p, t].x
+            ProductProduction.iloc[p, t] = int(x[p, t].x)
     for t in range(Time):
-        TotalProduction.iloc[0, t] = quicksum(x[p, t].x for p in range(Products)).getValue()
+        TotalProduction.iloc[0, t] = int(quicksum(x[p, t].x for p in range(Products)).getValue())
     Production = pd.concat([ProductProduction, TotalProduction])
     # ELEMENTS PROFIT AND LOSS STATEMENT
     PL = collections.defaultdict(dict)
