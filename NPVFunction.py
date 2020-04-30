@@ -73,6 +73,8 @@ def NPV_SAA(Data, w, h):
                     ['MaxCapacity']*12, name='Yearly Substrate Capacity')
 
     for s in range(Scenarios):
+        CCC[s] = (Data[s]['DIO']+Data[s]['DSO']-Data[s]['DPO'])/365
+        DWC[s, 0] = WC[s, 0]
         for t in range(Time):
             m.addConstr(Sales[s, t] == quicksum(
                 Data[s]['ProductPrice'].iloc[p, t+2] *
@@ -95,14 +97,14 @@ def NPV_SAA(Data, w, h):
             NCF[s, t] = (NI[s, t] + Data[s]['Depreciation'].iloc[0, t] - DWC[s, t] -
                          Data[s]['InvestmentCost'].iloc[0, t])
             NPV[s, t] = NCF[s, t]/((1+Data[s]['WACC'])**t) # TODO: Check whether this should be **(t+1)
-
-        # These constraints are only made for every s
-        CCC[s] = (Data[s]['DIO']+Data[s]['DSO']-Data[s]['DPO'])/365
-        NPVperScenario[s] = quicksum(NPV[s, t] for t in range(Time))
-        DWC[s, 0] = WC[s, 0]
-        
         for t in range(1, Time):
             DWC[s, t] = WC[s, t-1]-WC[s, t]
+        # These constraints are only made for every s
+        
+        NPVperScenario[s] = quicksum(NPV[s, t] for t in range(Time))
+        
+        
+        
 
     # OBJECTIVE
     obj = (1/Scenarios)*quicksum(quicksum(NPV[s, t] for s in range(Scenarios)) for t in range(Time))
@@ -116,7 +118,14 @@ def NPV_SAA(Data, w, h):
     for s in range(Scenarios):
         if NPVperScenario[s].getValue() < 0:
             NegativeScenario = NegativeScenario + 1
+            
+    ProductProduction = pd.DataFrame(np.zeros((Products,Time)), index = Data[0]['Yield']['Format'],
+                                     columns =Data[0]['InvestmentCost'].columns)
     
+    for p in range(Products):
+        for t in range(Time):
+            ProductProduction.iloc[p, t] = x[p, t].x
+   
     # ELEMENTS PROFIT AND LOSS STATEMENT
     PL = collections.defaultdict(dict)
     for t in range(Time):
@@ -134,4 +143,5 @@ def NPV_SAA(Data, w, h):
             'Width': w,
             'Height': h,
             '#NegativeScenarios': NegativeScenario,
-            'PL': PL}
+            'PL': PL,
+            'ProductsProduction':ProductProduction}
