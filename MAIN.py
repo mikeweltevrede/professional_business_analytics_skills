@@ -12,11 +12,11 @@ def main(data_path, output_path=None, num_scenarios=10,  max_height=None, max_wi
     Data = {i: generateData(data_path) for i in range(num_scenarios)}
     
     if max_width is None:
-        max_width = Data[0]['Max_width']
+        max_width = 1.85
     widths = [max_width-stepsize_width*i for i in range(num_width)]
 
     if max_height is None:
-        max_height = Data[0]['Max_height']
+        max_height = 1.55
     heights = [max_height-stepsize_height*i for i in range(num_height)]
     
     NPV = pd.DataFrame(np.zeros((num_height, num_width)), index=heights, columns=widths)
@@ -30,22 +30,22 @@ def main(data_path, output_path=None, num_scenarios=10,  max_height=None, max_wi
     if output_path is not None:
         NPV.to_csv(output_path)
     
-    return NPV
+    return NPV_
 
 if __name__ == "__main__": # This means that running this script will run the function main() above
-    num_scenarios = 500
+    num_scenarios = 10
     
     # Option 1: Maximise profit
     print('RUN OPTION 1')
     NPV_s1 = main(data_path="data/DataPBAS.xlsx", output_path="output/NPV Table_option1.csv",
                   num_scenarios=num_scenarios,
-                  num_height=55, num_width=85, stepsize_width=0.01, stepsize_height=0.01)
+                  num_height=12, num_width=5, stepsize_width=0.05, stepsize_height=0.05)
     
     # Option 2: Each market should constitute at least a certain amount of the production
     print('RUN OPTION 2')
     NPV_s2 = main(data_path="data/DataPBAS.xlsx", output_path="output/NPV Table_option2.csv",
                   num_scenarios=num_scenarios,
-                  num_height=55, num_width=85, stepsize_width=0.01, stepsize_height=0.01,
+                  num_height=12, num_width=5, stepsize_width=0.05, stepsize_height=0.05,
                   option=2,
                   product_thresholds={'notebooks': 0.1, 'monitors': 0.1, 'televisions': 0.1})
     
@@ -53,7 +53,7 @@ if __name__ == "__main__": # This means that running this script will run the fu
     print('RUN OPTION 3')
     NPV_s3 = main(data_path="data/DataPBAS.xlsx", output_path="output/NPV Table_option3.csv",
                   num_scenarios=num_scenarios, 
-                  num_height=55, num_width=85, stepsize_width=0.01, stepsize_height=0.01,
+                  num_height=12, num_width=5, stepsize_width=0.05, stepsize_height=0.05,
                   option=3, 
                   product_thresholds=0.03)
     
