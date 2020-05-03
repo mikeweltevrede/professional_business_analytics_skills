@@ -41,27 +41,24 @@ def main(Data, output_path1=None, output_path2=None, output_path3=None, max_heig
 #Data1000 = {i: generateData(data_path) for i in range(num_scenarios)}
 #Data500_keys = random.sample(list(Data1000.keys()),500)
 #Data500 ={}
-#for key in Data500_keys:
-#    Data500[key] = Data1000[key]
+#for key in range(len(Data500_keys)):
+#    Data500[key] = Data1000[Data500_keys[key]].copy()
 
 if __name__ == "__main__": # This means that running this script will run the function main() above
-    num_scenarios = 1000
-    
-    # Option 1: Maximise profit
-    print('RUN OPTION 1')
-    NPV_s1_zoom1 = main(Data1000, output_path1="output/NPV Table_option1_zoom1.csv",
-                  output_path2="output/NPVmax Table_option1_zoom1.csv",
-                  output_path3="output/NPVmin Table_option1_zoom1.csv",
-                  num_scenarios=num_scenarios,
-                  num_height=11, num_width=11, stepsize_width=0.01, stepsize_height=0.02,
-                  max_height=1.25, max_width=1.85)
+   
+#    # Option 1: Maximise profit
+#    print('RUN OPTION 1')
+#    NPV_s1_zoom1 = main(Data1000, output_path1="output/NPV Table_option1_zoom1.csv",
+#                  output_path2="output/NPVmax Table_option1_zoom1.csv",
+#                  output_path3="output/NPVmin Table_option1_zoom1.csv",
+#                  num_height=11, num_width=11, stepsize_width=0.01, stepsize_height=0.02,
+#                  max_height=1.25, max_width=1.85)
     
     # Option 2: Each market should constitute at least a certain amount of the production
     print('RUN OPTION 2')
-    NPV_s2 = main(Data, output_path1="output/NPV Table_option2_3%.csv",
+    NPV_s2 = main(Data500, output_path1="output/NPV Table_option2_3%.csv",
                   output_path2="output/NPVmax Table_option2_3%.csv",
                   output_path3="output/NPVmin Table_option2_3%.csv",
-                  num_scenarios=num_scenarios,
                   option=2,
                   num_height=12, num_width=5, stepsize_width=0.05, stepsize_height=0.05,
                   max_height=1.55, max_width=1.85,
