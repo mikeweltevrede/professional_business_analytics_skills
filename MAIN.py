@@ -56,13 +56,13 @@ if __name__ == "__main__": # This means that running this script will run the fu
     
     # Option 2: Each market should constitute at least a certain amount of the production
     print('RUN OPTION 2')
-    NPV_s2 = main(Data500, output_path1="output/NPV Table_option2_3%.csv",
-                  output_path2="output/NPVmax Table_option2_3%.csv",
-                  output_path3="output/NPVmin Table_option2_3%.csv",
+    NPV_s2 = main(Data500, output_path1="output/NPV Table_option2_1%zoom2.csv",
+                  output_path2="output/NPVmax Table_option2_1%zoom2.csv",
+                  output_path3="output/NPVmin Table_option2_1%zoom2.csv",
                   option=2,
-                  num_height=12, num_width=5, stepsize_width=0.05, stepsize_height=0.05,
-                  max_height=1.55, max_width=1.85,
-                  product_thresholds={'notebooks': 0.03, 'monitors': 0.03, 'televisions': 0.03})
+                  num_height=13, num_width=12, stepsize_width=0.02, stepsize_height=0.01,
+                  max_height=1.21, max_width=1.85,
+                  product_thresholds={'notebooks': 0.01, 'monitors': 0.01, 'televisions': 0.01})
     
     # Option 3: Each product should constitute at least a certain amount of the production
     print('RUN OPTION 3')
