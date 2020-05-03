@@ -1,8 +1,8 @@
+import collections
+import numpy as np
+import pandas as pd
 import gurobipy as gb
 from gurobipy import quicksum
-import numpy as np
-import collections
-import pandas as pd
 
 
 def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
@@ -137,7 +137,7 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
             NCF[s, t] = (NI[s, t] + Data[s]['Depreciation'].iloc[0, t] - DWC[s, t] -
                          Data[s]['InvestmentCost'].iloc[0, t])
 
-            NPV[s, t] = NCF[s, t]/((1+Data[s]['WACC'])**t) # TODO: Check whether this should be **(t+1)
+            NPV[s, t] = NCF[s, t]/((1+Data[s]['WACC'])**t)
         for t in range(1, Time):
             DWC[s, t] = WC[s, t-1]-WC[s, t]
 
@@ -207,6 +207,7 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
         PL[t]['CCC'] = (1/Scenarios)*(quicksum(CCC[s] for s in range(Scenarios))).getValue()
         PL[t]['NPV'] = ((1/Scenarios)*quicksum(NPV[s, t].getValue()
                                               for s in range(Scenarios))).getValue()
+        
     return {'Average NPV': obj.getValue(),
             'NPVmax': NPVmax,
             'NPVmin': NPVmin,
