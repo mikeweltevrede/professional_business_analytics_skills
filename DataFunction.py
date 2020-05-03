@@ -51,9 +51,9 @@ def generateData(path):
     ProductInches['Angle'] = [math.atan(ProductFormat.loc[0, formt] / ProductFormat.loc[1, formt])
                               for formt in ProductInches['Format']]
     ProductInches['Height (m)'] = np.cos(ProductInches['Angle']) * ProductInches['New Diagonal (inches)'] * \
-        0.0254 + ProductSize['Border_H (in mm)']/1000 + ProductSize['Exclusion (in mm)']/1000
+        0.0254 + 2*ProductSize['Border_H (in mm)']/1000 + 2*ProductSize['Exclusion (in mm)']/1000
     ProductInches['Width (m)'] = np.sin(ProductInches['Angle']) * ProductInches['New Diagonal (inches)'] * \
-        0.0254 + ProductSize['Border_V (in mm)']/1000 + ProductSize['Exclusion (in mm)']/1000
+        0.0254 + 2*ProductSize['Border_V (in mm)']/1000 + 2*ProductSize['Exclusion (in mm)']/1000
 
     # Prices per product over time including the uncertainty
     bandwidths_prices = [0.8, 1, 1.2]

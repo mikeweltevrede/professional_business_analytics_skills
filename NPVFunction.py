@@ -144,8 +144,7 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
 
         
         NPVperScenario[s] = quicksum(NPV[s, t] for t in range(Time))
-
-
+        
     # OBJECTIVE
     obj = (1/Scenarios)*quicksum(quicksum(NPV[s, t] for s in range(Scenarios)) for t in range(Time))
     m.setObjective(obj, gb.GRB.MAXIMIZE)
@@ -153,6 +152,9 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
     # RUN OPTIMIZATION
     m.optimize()
 
+    NPVmax = NPVperScenario[max(NPVperScenario)].getValue()
+    NPVmin = NPVperScenario[min(NPVperScenario)].getValue()
+    
     # Count negative scenarios
     NegativeScenario = 0
     for s in range(Scenarios):
@@ -178,6 +180,8 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
                                                  for s in range(Scenarios))).getValue()
         PL[t]['COS'] = ((1/Scenarios)*quicksum(COS2[s, t].X
                                                for s in range(Scenarios))).getValue()
+        PL[t]['CostofSales'] = ((1/Scenarios)*quicksum(CostofSales[s, t].X
+                                               for s in range(Scenarios))).getValue()
         PL[t]['GM'] = ((1/Scenarios)*quicksum(GM[s, t].getValue()
                                               for s in range(Scenarios))).getValue()
         PL[t]['RD'] = ((1/Scenarios)*quicksum(Data[s]['R&D']
@@ -190,16 +194,21 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
                                                for s in range(Scenarios))).getValue()
         PL[t]['NI'] = ((1/Scenarios)*quicksum(NI[s, t].getValue()
                                               for s in range(Scenarios))).getValue()
-        PL[t]['DWC'] = ((1/Scenarios)*quicksum(DWC[s, t] for s in range(Scenarios)))
+        PL[t]['DWC'] = (1/Scenarios)*(quicksum(DWC[s, t] for s in range(Scenarios))).getValue()
         PL[t]['WC'] = ((1/Scenarios)*quicksum(WC[s, t].getValue()
                                               for s in range(Scenarios))).getValue()
         PL[t]['Depreciation'] = ((1/Scenarios)*quicksum(Data[s]['Depreciation'].iloc[0, t]
                                                         for s in range(Scenarios))).getValue()
         PL[t]['CAPEX'] = ((1/Scenarios)*quicksum(Data[s]['InvestmentCost'].iloc[0, t]
-                                                 for s in range(Scenarios))).getValue()
-
+                                                for s in range(Scenarios))).getValue()
+        PL[t]['NCF'] = ((1/Scenarios)*quicksum(NCF[s, t].getValue()
+                                              for s in range(Scenarios))).getValue()
+        PL[t]['CCC'] = (1/Scenarios)*(quicksum(CCC[s] for s in range(Scenarios))).getValue()
+        PL[t]['NPV'] = ((1/Scenarios)*quicksum(NPV[s, t].getValue()
+                                              for s in range(Scenarios))).getValue()
     return {'Average NPV': obj.getValue(),
-            'Width': w,
+            'NPVmax': NPVmax,
+            'NPVmin': NPVmin,
             'Height': h,
             '#NegativeScenarios': NegativeScenario,
             'PL': PL,
