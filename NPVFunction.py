@@ -151,9 +151,10 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
 
     # RUN OPTIMIZATION
     m.optimize()
-
-    NPVmax = NPVperScenario[max(NPVperScenario)].getValue()
-    NPVmin = NPVperScenario[min(NPVperScenario)].getValue()
+    
+    NPVs = [NPVperScenario[s].getValue() for s in range(Scenarios)]
+    NPVmax = max(NPVs)
+    NPVmin = min(NPVs)
     
     # Count negative scenarios
     NegativeScenario = 0
@@ -209,6 +210,8 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
     return {'Average NPV': obj.getValue(),
             'NPVmax': NPVmax,
             'NPVmin': NPVmin,
+            'NPVs': NPVs,
+            'Width': w,
             'Height': h,
             '#NegativeScenarios': NegativeScenario,
             'PL': PL,
