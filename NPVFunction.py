@@ -70,7 +70,19 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
                              'num_height': num_height_vert,
                              'num_products': num_products_vert,
                              'product_orientation': 'vert'}
-
+    ## Profit Table
+    COS11 = {} #Costs per substate per time (cost for alle products equal)
+    Sales11 = {} #Sales per substrate per product per time
+    Profit1 = {} # Is product profitable?
+    for t in range(Time):
+        for p in range(Products):
+            COS11[t] = (1/Scenarios)*sum(Data[s]['SubstrateCost'].iloc[0, t]*(w*h) for s in range(Scenarios))
+                    
+            Sales11[p ,t] = (1/Scenarios)*sum(Data[s]['ProductPrice'].iloc[p, t+2] *Data[s]['Yield'].iloc[p, t+4]*PoS[s][p]['num_products'] for s in range(Scenarios))
+                      
+            Profit1[p ,t] = Sales11[p, t] - COS11[t]
+    
+    
     # INITIALIZE MODEL
     m = gb.Model('PBAS')
     if not verbose:
@@ -99,13 +111,32 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
                     ['MaxCapacity']*12, name='Yearly Substrate Capacity')
 
     if option == 2:
-        for t in range(2, Time):  # Start at t = 2, yield for t = 0 and 1 is equal to 0
-            m.addConstr(quicksum(x[p, t] for p in Notebook) >=
+        for t in range(Time):
+            for p in Notebook:
+                if Profit1[p, t] > 0:
+                    m.addConstr(quicksum(x[p, t] for p in Notebook) >=
                         product_thresholds['notebooks']*Data[0]['MaxCapacity']*12)
-            m.addConstr(quicksum(x[p, t] for p in Monitor) >=
+            for p in Monitor:
+                if Profit1[p, t] > 0:
+                    m.addConstr(quicksum(x[p, t] for p in Monitor) >=
                         product_thresholds['monitors']*Data[0]['MaxCapacity']*12)
-            m.addConstr(quicksum(x[p, t] for p in Television) >=
+            for p in Television:
+                if Profit1[p, t] > 0:
+                    m.addConstr(quicksum(x[p, t] for p in Television) >=
                         product_thresholds['televisions']*Data[0]['MaxCapacity']*12)
+                    
+                    
+                
+
+                    
+                    
+#        for t in range(2, Time):  # Start at t = 2, yield for t = 0 and 1 is equal to 0
+#            m.addConstr(quicksum(x[p, t] for p in Notebook) >=
+#                        product_thresholds['notebooks']*Data[0]['MaxCapacity']*12)
+#            m.addConstr(quicksum(x[p, t] for p in Monitor) >=
+#                        product_thresholds['monitors']*Data[0]['MaxCapacity']*12)
+#            m.addConstr(quicksum(x[p, t] for p in Television) >=
+#                        product_thresholds['televisions']*Data[0]['MaxCapacity']*12)
 
     if option == 3:
         for p in range(Products):
