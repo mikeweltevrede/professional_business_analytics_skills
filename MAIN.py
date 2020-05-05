@@ -82,7 +82,7 @@ if __name__ == "__main__": # This means that running this script will run the fu
     # print('RUN OPTION 2')
     # # Construct the thresholds based on reverse product size
     # min_percentage = 0.01
-    # means = Data[0]['ProductSize'].groupby('Market')['Size (inches)'].agg(np.mean)
+    # means = Data1000[0]['ProductSize'].groupby('Market')['Size (inches)'].agg(np.mean)
     # reversemeans = (1-means/sum(means))
     
     # # Scale such that minimum is min_percentage%
