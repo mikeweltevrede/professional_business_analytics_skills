@@ -75,8 +75,8 @@ if __name__ == "__main__": # This means that running this script will run the fu
                                           output_path2="output/NPVmax Table_option1.csv",
                                           output_path3="output/NPVmin Table_option1.csv",
                                           max_height=1.55, max_width=1.85,
-                                          stepsize_width=0.05, stepsize_height=0.01,
-                                          num_height=11, num_width=15)
+                                          stepsize_height=0.05, stepsize_width=0.01, 
+                                          num_height=11, num_width=5)
     
     # Option 2: Each market should constitute at least a certain amount of the production
     # print('RUN OPTION 2')
