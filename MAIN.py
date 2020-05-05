@@ -58,7 +58,7 @@ if __name__ == "__main__": # This means that running this script will run the fu
     if os.path.isfile(data500_path):
         # Then this file already exists and can be imported
         with open(data500_path, "rb") as data:
-            Data500 = pickle.load(data1000_path)
+            Data500 = pickle.load(data)
     else:
         # This file needs to be created
         random.seed(42)
