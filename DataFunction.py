@@ -74,9 +74,9 @@ def generateData(path):
     CostInvestment = CostInvestment.fillna(0)
 
     # Yield per market over time including the uncertainty
-    bandwidths_yield = [0.85, 1, 1.02]  # 15% down or 2% up
+    bandwidths_yield = [-0.15, 0, 0.02]  # 15% down or 2% up
     Yield = Yield.drop(columns=["Blaco", "Blanco"]).copy()
-    Yield = pd.concat([Yield['Yieldpermarket'], Yield.iloc[:, 1:] * np.random.choice(
+    Yield = pd.concat([Yield['Yieldpermarket'], Yield.iloc[:, 1:] + np.random.choice(
         bandwidths_yield, (Yield.shape[0], Yield.shape[1]-1), probability)], axis=1)
     Yield = pd.merge(ProductMeta, Yield, left_on='Market', right_on='Yieldpermarket', how='left')
     Yield = Yield.fillna(0)

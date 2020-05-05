@@ -74,6 +74,8 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
     COS11 = {} #Costs per substate per time (cost for alle products equal)
     Sales11 = {} #Sales per substrate per product per time
     Profit1 = {} # Is product profitable?
+    Profit2 = {}
+    Ratio = {}
     for t in range(Time):
         for p in range(Products):
             COS11[t] = (1/Scenarios)*sum(Data[s]['SubstrateCost'].iloc[0, t]*(w*h) for s in range(Scenarios))
@@ -81,6 +83,18 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
             Sales11[p ,t] = (1/Scenarios)*sum(Data[s]['ProductPrice'].iloc[p, t+2] *Data[s]['Yield'].iloc[p, t+4]*PoS[s][p]['num_products'] for s in range(Scenarios))
                       
             Profit1[p ,t] = Sales11[p, t] - COS11[t]
+            if Profit1[p ,t] > 0:
+                Profit2[p, t] = Profit1[p, t]
+            else: 
+                Profit2[p, t] = 0
+    for t in range(Time):
+        for p in range(Products):                
+            if sum(Profit2[p, t] for p in range(Products)) > 0: # Eerste twee jaar deel je anders door 0, want yield is 0
+                Ratio[p, t] = Profit2[p, t]/sum(Profit2[p, t] for p in range(Products))
+            else:
+                Ratio[p, t] = 0
+           
+            
     
     
     # INITIALIZE MODEL
@@ -168,7 +182,7 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
             NCF[s, t] = (NI[s, t] + Data[s]['Depreciation'].iloc[0, t] - DWC[s, t] -
                          Data[s]['InvestmentCost'].iloc[0, t])
 
-            NPV[s, t] = NCF[s, t]/((1+Data[s]['WACC'])**t) # TODO: Check whether this should be **(t+1)
+            NPV[s, t] = NCF[s, t]/((1+Data[s]['WACC'])**t) 
         for t in range(1, Time):
             DWC[s, t] = WC[s, t-1]-WC[s, t]
 
@@ -247,3 +261,4 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
             '#NegativeScenarios': NegativeScenario,
             'PL': PL,
             'Production':Production}
+(1/Scenarios)*sum(Data[s]['Yield'].values[1,6] for s in range(Scenarios))
