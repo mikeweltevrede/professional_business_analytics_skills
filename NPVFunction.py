@@ -82,7 +82,6 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
                       
             Profit1[p ,t] = Sales11[p, t] - COS11[t]
     
-    
     # INITIALIZE MODEL
     m = gb.Model('PBAS')
     if not verbose:
@@ -208,6 +207,14 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
     # ELEMENTS PROFIT AND LOSS STATEMENT
     PL = collections.defaultdict(dict)
     for t in range(Time):
+        PL[t]['ProductPrice'] = [((1/Scenarios)*quicksum(Data[s]['ProductPrice'].iloc[p, t+2]
+                                             for s in range(Scenarios))).getValue() 
+                                                 for p in range(Products)]# Price per product
+        PL[t]['NumberofProducts'] = [((1/Scenarios)*quicksum(PoS[s][p]['num_products']
+                                            for s in range(Scenarios))).getValue()
+                                                for p in range(Products)]
+        PL[t]['SubstrateCost'] = ((1/Scenarios)*sum(Data[s]['SubstrateCost'].iloc[0, t]*(w*h) 
+                                            for s in range(Scenarios)))
         PL[t]['SALES'] = ((1/Scenarios)*quicksum(Sales[s, t].X
                                                  for s in range(Scenarios))).getValue()
         PL[t]['COS'] = ((1/Scenarios)*quicksum(COS2[s, t].X
