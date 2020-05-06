@@ -7,8 +7,7 @@ from tqdm import tqdm
 from DataFunction import generateData
 from NPVFunction import NPV_SAA
 
-def main(Data, output_path1=None, output_path2=None, output_path3=None, output_path4=None,
-         max_height=None,
+def main(Data, output_path1=None, output_path2=None, output_path3=None, max_height=None,
          max_width=None, num_height=11, num_width=17, stepsize_width=0.05, stepsize_height=0.05,
          option=1, product_thresholds=None, verbose=False):
     
@@ -23,7 +22,6 @@ def main(Data, output_path1=None, output_path2=None, output_path3=None, output_p
     NPV = pd.DataFrame(np.zeros((num_height, num_width)), index=heights, columns=widths)
     NPVmax = NPV.copy()
     NPVmin = NPV.copy()
-    NPVneg = NPV.copy()
 
     for h in tqdm(range(num_height)):
         for w in tqdm(range(num_width)):
@@ -32,13 +30,11 @@ def main(Data, output_path1=None, output_path2=None, output_path3=None, output_p
             NPV.values[h, w] = NPV_['Average NPV']
             NPVmax.values[h, w] = NPV_['NPVmax']
             NPVmin.values[h, w] = NPV_['NPVmin']
-            NPVneg.values[h, w] = 1-(NPV_['#NegativeScenarios'])/len(Data)
     
     if output_path1 is not None:
         NPV.to_csv(output_path1)
         NPVmax.to_csv(output_path2)
         NPVmin.to_csv(output_path3)
-        NPVneg.to_csv(output_path4)
     
     return NPV, NPVmax, NPVmin
 
@@ -74,45 +70,44 @@ if __name__ == "__main__": # This means that running this script will run the fu
 
     # Option 1: Maximise profit
     print('RUN OPTION 1')
-#    NPV_s1, NPV_s1_max, NPV_s1_min = main(Data500, option=1,
-#                                          output_path1="output/NPV Table_option1.csv",
-#                                          output_path2="output/NPVmax Table_option1.csv",
-#                                          output_path3="output/NPVmin Table_option1.csv",
-#                                          max_height=1.55, max_width=1.85,
-#                                          stepsize_width=0.05, stepsize_height=0.01,
-#                                          num_height=11, num_width=15)
+    NPV_s1, NPV_s1_max, NPV_s1_min = main(Data500, option=1,
+                                          output_path1="output/NPV Table_option1.csv",
+                                          output_path2="output/NPVmax Table_option1.csv",
+                                          output_path3="output/NPVmin Table_option1.csv",
+                                          max_height=1.55, max_width=1.85,
+                                          stepsize_width=0.05, stepsize_height=0.01,
+                                          num_height=11, num_width=15)
     
-     # Option 2: Each market should constitute at least a certain amount of the production
-    print('RUN OPTION 2')
-    # Construct the thresholds based on reverse product size
-    min_percentage = 0.005
-    means = Data1000[0]['ProductSize'].groupby('Market')['Size (inches)'].agg(np.mean)
-    reversemeans = (1-means/sum(means))
+    # Option 2: Each market should constitute at least a certain amount of the production
+    # print('RUN OPTION 2')
+    # # Construct the thresholds based on reverse product size
+    # min_percentage = 0.01
+    # means = Data1000[0]['ProductSize'].groupby('Market')['Size (inches)'].agg(np.mean)
+    # reversemeans = (1-means/sum(means))
     
-     # Scale such that minimum is min_percentage%
-    reversemeans_scaled = reversemeans/(min(reversemeans)/min_percentage)
+    # # Scale such that minimum is min_percentage%
+    # reversemeans_scaled = reversemeans/(min(reversemeans)/min_percentage)
     
-    NPV_s2, NPV_s2_max, NPV_s2_min = main(Data500, option=2,
-                                           output_path1=f"output/NPV Table_option2_{min_percentage}.csv",
-                                           output_path2=f"output/NPVmax Table_option2_{min_percentage}.csv",
-                                           output_path3=f"output/NPVmin Table_option2_{min_percentage}.csv",
-                                           output_path4=f"output/Negative scenarios Table_option2_{min_percentage}.csv",
-                                           max_height=1.55, max_width=1.85,
-                                           stepsize_height=0.05, stepsize_width=0.05,
-                                           num_height=1, num_width=1,
-                                           product_thresholds={
-                                               'notebooks': reversemeans_scaled['Notebook'],
-                                               'monitors': reversemeans_scaled['Monitor'],
-                                               'televisions': reversemeans_scaled['Television']
-                                               })
+    # NPV_s2, NPV_s2_max, NPV_s2_min = main(Data500, option=2,
+    #                                       output_path1=f"output/NPV Table_option2_{min_percentage}.csv",
+    #                                       output_path2=f"output/NPVmax Table_option2_{min_percentage}.csv",
+    #                                       output_path3=f"output/NPVmin Table_option2_{min_percentage}.csv",
+    #                                       max_height=1.55, max_width=1.85,
+    #                                       stepsize_height=0.05, stepsize_width=0.01,
+    #                                       num_height=11, num_width=15,
+    #                                       product_thresholds={
+    #                                           'notebooks': reversemeans_scaled['Notebook'],
+    #                                           'monitors': reversemeans_scaled['Monitor'],
+    #                                           'televisions': reversemeans_scaled['Television']
+    #                                           })
     
-     # Option 3: Each product should constitute at least a certain amount of the production
-#     print('RUN OPTION 3')
-#     threshold=0.005
-#     NPV_s3, NPV_s3_max, NPV_s3_max = main(Data500, option=3,
-#                                           output_path1=f"output/NPV Table_option3_{threshold}.csv",
-#                                           output_path2=f"output/NPVmax Table_option3_{threshold}.csv",
-#                                           output_path3=f"output/NPVmin Table_option3_{threshold}.csv",
-#                                           num_height=11, num_width=17, stepsize_width=0.05,
-#                                           stepsize_height=0.05, product_thresholds=threshold)
+    # # Option 3: Each product should constitute at least a certain amount of the production
+    # print('RUN OPTION 3')
+    # threshold=0.005
+    # NPV_s3, NPV_s3_max, NPV_s3_max = main(Data500, option=3,
+    #                                       output_path1=f"output/NPV Table_option3_{threshold}.csv",
+    #                                       output_path2=f"output/NPVmax Table_option3_{threshold}.csv",
+    #                                       output_path3=f"output/NPVmin Table_option3_{threshold}.csv",
+    #                                       num_height=11, num_width=17, stepsize_width=0.05,
+    #                                       stepsize_height=0.05, product_thresholds=threshold)
     
