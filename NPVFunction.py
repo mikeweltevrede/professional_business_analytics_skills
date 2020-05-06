@@ -201,14 +201,28 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
         TotalProduction.iloc[0, t] = int(quicksum(x[p, t].x for p in range(Products)).getValue())
 
     Production = pd.concat([ProductProduction, TotalProduction])
-
+    ## Number of products Sold (Average over scenarios dus kan non integer zijn!!)   
+    NumberofProducts = pd.DataFrame(np.zeros((Products, Time)), index=Data[0]['Yield']['Format'],
+                                     columns=Data[0]['InvestmentCost'].columns)
+    PriceProducts = pd.DataFrame(np.zeros((Products, Time)), index=Data[0]['Yield']['Format'],
+                                     columns=Data[0]['InvestmentCost'].columns)
+    
+    for p in range(Products):
+        for t in range(Time):
+            NumberofProducts.iloc[p, t] = (Production.iloc[p, t]* (1/Scenarios)*
+                                 sum(PoS[s][p]['num_products'] for s in range(Scenarios)) * 
+                                 (1/Scenarios)*sum(Data[s]['Yield'].iloc[p, t+4] 
+                                 for s in range(Scenarios)))
+            PriceProducts.iloc[p, t] = ((1/Scenarios)*sum(Data[s]['ProductPrice'].iloc[p, t+2] 
+                                        for s in range(Scenarios)))
+    
     # ELEMENTS PROFIT AND LOSS STATEMENT
     PL = collections.defaultdict(dict)
     for t in range(Time):
         PL[t]['ProductPrice'] = [((1/Scenarios)*quicksum(Data[s]['ProductPrice'].iloc[p, t+2]
                                                          for s in range(Scenarios))).getValue()
                                  for p in range(Products)]  # Price per product
-        PL[t]['NumberofProducts'] = [((1/Scenarios)*quicksum(PoS[s][p]['num_products']
+        PL[t]['NumberofProductsSold'] = [((1/Scenarios)*quicksum(PoS[s][p]['num_products']
                                                              for s in range(Scenarios))).getValue()
                                      for p in range(Products)]
         PL[t]['SubstrateCost'] = ((1/Scenarios)*sum(Data[s]['SubstrateCost'].iloc[0, t]*(w*h)
