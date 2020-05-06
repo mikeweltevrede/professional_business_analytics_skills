@@ -77,11 +77,16 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
     ProductInches = ProductMeta.copy()
     
     try:
+        # (ProductInches['Market'] == 'Television') is a boolean indicator for whether the product
+        # is a television. If multiplied, True is treated as 1 and False is treated as 0. As such,
+        # we only add the outcomes of the random selection to the televisions
         ProductInches['New Diagonal (inches)'] = ProductInches['Size (inches)'] + \
-            np.random.choice(bandwidths_tv, num_products, p=probability['tv'])
+            np.random.choice(bandwidths_tv, num_products, p=probability['tv']) * \
+                (ProductInches['Market'] == 'Television')
     except KeyError:
         ProductInches['New Diagonal (inches)'] = ProductInches['Size (inches)'] + \
-            np.random.choice(bandwidths_tv, num_products, p=probability['all'])
+            np.random.choice(bandwidths_tv, num_products, p=probability['all']) * \
+                (ProductInches['Market'] == 'Television')
     
     ProductInches['Angle'] = [math.atan(ProductFormat.loc[0, formt] / ProductFormat.loc[1, formt])
                               for formt in ProductInches['Format']]
