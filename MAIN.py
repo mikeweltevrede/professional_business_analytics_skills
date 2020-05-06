@@ -52,9 +52,9 @@ if __name__ == "__main__": # This means that running this script will run the fu
                   stepsize_height=0.02)
 
    
-#    num_scenarios = 500
-#    data_path = "data/DataPBAS.xlsx"
-#    Data = {i: generateData(data_path) for i in tqdm(range(num_scenarios))}
+    num_scenarios = 100
+    data_path = "data/DataPBAS.xlsx"
+    Data = {i: generateData(data_path) for i in tqdm(range(num_scenarios))}
     
     # Data500_keys = random.sample(list(Data.keys()), 500)
     # Data500 ={}
