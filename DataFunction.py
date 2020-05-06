@@ -107,7 +107,7 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
     try:
         CostSubstrate = CostSubstrate.iloc[:, 3:] * np.random.choice(
             bandwidths_substrate_prices, len(CostSubstrate.columns[3:]),
-            probability['substrate_prices'])
+            p=probability['substrate_prices'])
     except KeyError:
         CostSubstrate = CostSubstrate.iloc[:, 3:] * np.random.choice(
             bandwidths_substrate_prices, len(CostSubstrate.columns[3:]), p=probability['all'])
