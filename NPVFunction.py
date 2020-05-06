@@ -16,16 +16,15 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
         product_thresholds_keys = {'notebooks', 'monitors', 'televisions'}
         assert product_thresholds_keys <= product_thresholds.keys(), \
             f"product_thresholds should have keys {product_thresholds_keys}"
-        assert all (0 <= product_thresholds[key] <= 1 for key in product_thresholds_keys), \
+        assert all(0 <= product_thresholds[key] <= 1 for key in product_thresholds_keys), \
             (f"The values in product_thresholds for {product_thresholds_keys} should be a number "
-            "between 0 and 1 when option is 2")
+             "between 0 and 1 when option is 2")
 
     if option == 3:
         assert isinstance(product_thresholds, float), \
             "product_thresholds should be a number when option is 3"
         assert 0 <= product_thresholds <= 1, \
             "product_thresholds should be a number between 0 and 1 when option is 3"
-
 
     Scenarios = len(Data)
     Products = len(Data[0]['ProductSize'])
@@ -71,25 +70,25 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
                              'num_products': num_products_vert,
                              'product_orientation': 'vert'}
     # Profit Table
-    COS11 = {} #Costs per substate per time (cost for alle products equal)
-    Sales11 = {} #Sales per substrate per product per time
-    Profit1 = {} # Is product profitable?
-    
+    COS11 = {}  # Costs per substate per time (cost for alle products equal)
+    Sales11 = {}  # Sales per substrate per product per time
+    Profit1 = {}  # Is product profitable?
+
     for t in range(Time):
         for p in range(Products):
             COS11[t] = (1/Scenarios)*sum(Data[s]['SubstrateCost'].iloc[0, t]*(w*h)
                                          for s in range(Scenarios))
-            Sales11[p ,t] = (1/Scenarios)*sum(Data[s]['ProductPrice'].iloc[p, t+2] * \
-                                              Data[s]['Yield'].iloc[p, t+4] * \
-                                                  PoS[s][p]['num_products']
-                                                  for s in range(Scenarios))
+            Sales11[p, t] = (1/Scenarios)*sum(Data[s]['ProductPrice'].iloc[p, t+2] *
+                                              Data[s]['Yield'].iloc[p, t+4] *
+                                              PoS[s][p]['num_products']
+                                              for s in range(Scenarios))
             Profit1[p, t] = Sales11[p, t] - COS11[t]
-    
+
     # INITIALIZE MODEL
     m = gb.Model('PBAS')
     if not verbose:
         m.setParam('OutputFlag', False)
-    
+
     # VARIABLES
     x = m.addVars(Products, Time, vtype=gb.GRB.INTEGER, lb=0,
                   name='Substrate per product over time')
@@ -120,18 +119,18 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
             for p in Notebook:
                 if Profit1[p, t] > 0:
                     m.addConstr(quicksum(x[p, t] for p in Notebook) >=
-                        product_thresholds['notebooks']*Data[0]['MaxCapacity']*12)
-                    break # We only need one product to be profitable to add this constraint
+                                product_thresholds['notebooks']*Data[0]['MaxCapacity']*12)
+                    break  # We only need one product to be profitable to add this constraint
             for p in Monitor:
                 if Profit1[p, t] > 0:
                     m.addConstr(quicksum(x[p, t] for p in Monitor) >=
-                        product_thresholds['monitors']*Data[0]['MaxCapacity']*12)
-                    break # Dito
+                                product_thresholds['monitors']*Data[0]['MaxCapacity']*12)
+                    break  # Dito
             for p in Television:
                 if Profit1[p, t] > 0:
                     m.addConstr(quicksum(x[p, t] for p in Television) >=
-                        product_thresholds['televisions']*Data[0]['MaxCapacity']*12)
-                    break # Dito
+                                product_thresholds['televisions']*Data[0]['MaxCapacity']*12)
+                    break  # Dito
 
     if option == 3:
         for p in range(Products):
@@ -141,7 +140,7 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
     for s in range(Scenarios):
         CCC[s] = (Data[s]['DIO']+Data[s]['DSO']-Data[s]['DPO'])/365
         DWC[s, 0] = WC[s, 0]
-        
+
         for t in range(Time):
             m.addConstr(Sales[s, t] == quicksum(
                 Data[s]['ProductPrice'].iloc[p, t+2] *
@@ -164,62 +163,62 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
             NCF[s, t] = (NI[s, t] + Data[s]['Depreciation'].iloc[0, t] - DWC[s, t] -
                          Data[s]['InvestmentCost'].iloc[0, t])
 
-            NPV[s, t] = NCF[s, t]/((1+Data[s]['WACC'])**t) 
+            NPV[s, t] = NCF[s, t]/((1+Data[s]['WACC'])**t)
 
         for t in range(1, Time):
             DWC[s, t] = WC[s, t-1]-WC[s, t]
 
         NPVperScenario[s] = quicksum(NPV[s, t] for t in range(Time))
-        
+
     # OBJECTIVE
     obj = (1/Scenarios)*quicksum(quicksum(NPV[s, t] for s in range(Scenarios)) for t in range(Time))
     m.setObjective(obj, gb.GRB.MAXIMIZE)
 
     # RUN OPTIMIZATION
     m.optimize()
-    
+
     NPVs = [NPVperScenario[s].getValue() for s in range(Scenarios)]
     NPVmax = max(NPVs)
     NPVmin = min(NPVs)
-    
+
     # Count negative scenarios
     NegativeScenario = 0
     for s in range(Scenarios):
         if NPVperScenario[s].getValue() < 0:
             NegativeScenario = NegativeScenario + 1
 
-    # Production Table        
-    ProductProduction = pd.DataFrame(np.zeros((Products,Time)), index=Data[0]['Yield']['Format'],
+    # Production Table
+    ProductProduction = pd.DataFrame(np.zeros((Products, Time)), index=Data[0]['Yield']['Format'],
                                      columns=Data[0]['InvestmentCost'].columns)
-    TotalProduction = pd.DataFrame(np.zeros((1,Time)), index=['Total Production'], 
+    TotalProduction = pd.DataFrame(np.zeros((1, Time)), index=['Total Production'],
                                    columns=Data[0]['InvestmentCost'].columns)
-    
+
     for p in range(Products):
         for t in range(Time):
             ProductProduction.iloc[p, t] = int(x[p, t].x)
-            
+
     for t in range(Time):
         TotalProduction.iloc[0, t] = int(quicksum(x[p, t].x for p in range(Products)).getValue())
-        
+
     Production = pd.concat([ProductProduction, TotalProduction])
 
     # ELEMENTS PROFIT AND LOSS STATEMENT
     PL = collections.defaultdict(dict)
     for t in range(Time):
         PL[t]['ProductPrice'] = [((1/Scenarios)*quicksum(Data[s]['ProductPrice'].iloc[p, t+2]
-                                             for s in range(Scenarios))).getValue() 
-                                                 for p in range(Products)]# Price per product
+                                                         for s in range(Scenarios))).getValue()
+                                 for p in range(Products)]  # Price per product
         PL[t]['NumberofProducts'] = [((1/Scenarios)*quicksum(PoS[s][p]['num_products']
-                                            for s in range(Scenarios))).getValue()
-                                                for p in range(Products)]
-        PL[t]['SubstrateCost'] = ((1/Scenarios)*sum(Data[s]['SubstrateCost'].iloc[0, t]*(w*h) 
-                                            for s in range(Scenarios)))
+                                                             for s in range(Scenarios))).getValue()
+                                     for p in range(Products)]
+        PL[t]['SubstrateCost'] = ((1/Scenarios)*sum(Data[s]['SubstrateCost'].iloc[0, t]*(w*h)
+                                                    for s in range(Scenarios)))
         PL[t]['SALES'] = ((1/Scenarios)*quicksum(Sales[s, t].X
                                                  for s in range(Scenarios))).getValue()
         PL[t]['COS'] = ((1/Scenarios)*quicksum(COS2[s, t].X
                                                for s in range(Scenarios))).getValue()
         PL[t]['CostofSales'] = ((1/Scenarios)*quicksum(CostofSales[s, t].X
-                                               for s in range(Scenarios))).getValue()
+                                                       for s in range(Scenarios))).getValue()
         PL[t]['GM'] = ((1/Scenarios)*quicksum(GM[s, t].getValue()
                                               for s in range(Scenarios))).getValue()
         PL[t]['RD'] = ((1/Scenarios)*quicksum(Data[s]['R&D']
@@ -238,13 +237,13 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
         PL[t]['Depreciation'] = ((1/Scenarios)*quicksum(Data[s]['Depreciation'].iloc[0, t]
                                                         for s in range(Scenarios))).getValue()
         PL[t]['CAPEX'] = ((1/Scenarios)*quicksum(Data[s]['InvestmentCost'].iloc[0, t]
-                                                for s in range(Scenarios))).getValue()
+                                                 for s in range(Scenarios))).getValue()
         PL[t]['NCF'] = ((1/Scenarios)*quicksum(NCF[s, t].getValue()
-                                              for s in range(Scenarios))).getValue()
+                                               for s in range(Scenarios))).getValue()
         PL[t]['CCC'] = (1/Scenarios)*(quicksum(CCC[s] for s in range(Scenarios))).getValue()
         PL[t]['NPV'] = ((1/Scenarios)*quicksum(NPV[s, t].getValue()
-                                              for s in range(Scenarios))).getValue()
-        
+                                               for s in range(Scenarios))).getValue()
+
     return {'Average NPV': obj.getValue(),
             'NPVmax': NPVmax,
             'NPVmin': NPVmin,
@@ -253,4 +252,4 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
             'Height': h,
             '#NegativeScenarios': NegativeScenario,
             'PL': PL,
-            'Production':Production}
+            'Production': Production}
