@@ -7,7 +7,8 @@ from tqdm import tqdm
 from DataFunction import generateData
 from NPVFunction import NPV_SAA
 
-def main(Data, output_path1=None, output_path2=None, output_path3=None, max_height=None,
+def main(Data, output_path1=None, output_path2=None, output_path3=None, output_path4=None,
+         max_height=None,
          max_width=None, num_height=11, num_width=17, stepsize_width=0.05, stepsize_height=0.05,
          option=1, product_thresholds=None, verbose=False):
     
@@ -22,6 +23,7 @@ def main(Data, output_path1=None, output_path2=None, output_path3=None, max_heig
     NPV = pd.DataFrame(np.zeros((num_height, num_width)), index=heights, columns=widths)
     NPVmax = NPV.copy()
     NPVmin = NPV.copy()
+    NPVpos = NPV.copy()
 
     for h in tqdm(range(num_height)):
         for w in tqdm(range(num_width)):
@@ -30,11 +32,13 @@ def main(Data, output_path1=None, output_path2=None, output_path3=None, max_heig
             NPV.values[h, w] = NPV_['Average NPV']
             NPVmax.values[h, w] = NPV_['NPVmax']
             NPVmin.values[h, w] = NPV_['NPVmin']
+            NPVpos.values[h, w] = 1-(NPV_['#NegativeScenarios']/len(Data))
     
     if output_path1 is not None:
         NPV.to_csv(output_path1)
         NPVmax.to_csv(output_path2)
         NPVmin.to_csv(output_path3)
+        NPVpos.to_csv(output_path4)
     
     return NPV, NPVmax, NPVmin
 
@@ -74,9 +78,10 @@ if __name__ == "__main__": # This means that running this script will run the fu
                                           output_path1="output/NPV Table_option1.csv",
                                           output_path2="output/NPVmax Table_option1.csv",
                                           output_path3="output/NPVmin Table_option1.csv",
+                                          output_path4="output/NPV positive values_option1.csv",
                                           max_height=1.55, max_width=1.85,
                                           stepsize_height=0.05, stepsize_width=0.01, 
-                                          num_height=11, num_width=5)
+                                          num_height=1, num_width=1)
     
     # Option 2: Each market should constitute at least a certain amount of the production
     # print('RUN OPTION 2')
@@ -92,6 +97,7 @@ if __name__ == "__main__": # This means that running this script will run the fu
     #                                       output_path1=f"output/NPV Table_option2_{min_percentage}.csv",
     #                                       output_path2=f"output/NPVmax Table_option2_{min_percentage}.csv",
     #                                       output_path3=f"output/NPVmin Table_option2_{min_percentage}.csv",
+    #                                       output_path4=f"output/NPV postive values Table_option2_{min_percentage}.csv",
     #                                       max_height=1.55, max_width=1.85,
     #                                       stepsize_height=0.05, stepsize_width=0.01,
     #                                       num_height=11, num_width=15,
