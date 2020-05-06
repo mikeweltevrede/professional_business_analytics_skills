@@ -9,7 +9,7 @@ from NPVFunction import NPV_SAA
 
 
 def main(Data, output_path1=None, output_path2=None, output_path3=None, output_path4=None,
-         max_height=None, max_width=None, num_height=11, num_width=17, stepsize_width=0.05,
+         max_height=None, max_width=None, num_height=12, num_width=18, stepsize_width=0.05,
          stepsize_height=0.05, option=1, product_thresholds=None, verbose=False):
 
     if max_width is None:
@@ -41,7 +41,7 @@ def main(Data, output_path1=None, output_path2=None, output_path3=None, output_p
         NPVpos.to_csv(output_path4)
 
 
-if __name__ == "__main__":  # This means that running this script will run the function main() above
+if __name__ == "__main__":  # This means that running this script will run the code below
 
     # Create data
     data1000_path = "data/data1000.pkl"
@@ -113,15 +113,14 @@ if __name__ == "__main__":  # This means that running this script will run the f
     #                                       output_path3=f"output/NPVmin Table_option2_{min_percentage}.csv",
 
     # Option 1: Maximise profit # TODO
-    # print('RUN OPTION 1')
-    # NPV_s1, NPV_s1_max, NPV_s1_min = main(Data500, option=1,
-    #                                       output_path1="output/NPV Table_option1.csv",
-    #                                       output_path2="output/NPVmax Table_option1.csv",
-    #                                       output_path3="output/NPVmin Table_option1.csv",
-    #                                       output_path4="output/NPVpos Table_option1.csv",
-    #                                       max_height=1.55, max_width=1.85,
-    #                                       stepsize_height=0.05, stepsize_width=0.01,
-    #                                       num_height=12, num_width=6)
+    print('RUN OPTION 1')
+    
+    # Run full grid (1.80-1.85 (0.05) x 1.55-1.00 (0.05))
+    main(Data500, option=1,
+         output_path1="output/NPV Table_option1.csv",
+         output_path2="output/NPVmax Table_option1.csv",
+         output_path3="output/NPVmin Table_option1.csv",
+         output_path4="output/NPVpos Table_option1.csv")
 
     # Option 2: Each market should constitute at least a certain amount of the production
     print('RUN OPTION 2')
