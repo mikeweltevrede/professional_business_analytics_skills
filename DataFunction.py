@@ -1,7 +1,7 @@
-"""
-GROUP 6 PBAS
-Data import file, incl randomness.
-"""
+import numpy as np
+import pandas as pd
+import statistics as st
+import math
 
 
 def generateData(path):
@@ -24,11 +24,6 @@ def generateData(path):
         When the year for depreciation is not yet initialized, create it
     """
 
-    import numpy as np
-    import pandas as pd
-    import statistics as st
-    import math
-
     Data = pd.ExcelFile(path)
     ProductSize = pd.read_excel(Data, "ProductSize")
     ProductFormat = pd.read_excel(Data, "ProductFormat")
@@ -40,9 +35,9 @@ def generateData(path):
 
     num_products = len(ProductSize)
     ProductMeta = ProductSize[['Size (inches)', 'Format', 'Market']].copy()
+    probability = [0.25, 0.5, 0.25]  # Same for all uncertainty bandwidths
 
     # ProductInches including the uncertainty for TV screen size
-    probability = [0.25, 0.5, 0.25]
     bandwidths_tv = [-2, 0, 1]
 
     ProductInches = ProductMeta.copy()
@@ -50,10 +45,12 @@ def generateData(path):
         np.random.choice(bandwidths_tv, num_products, probability)
     ProductInches['Angle'] = [math.atan(ProductFormat.loc[0, formt] / ProductFormat.loc[1, formt])
                               for formt in ProductInches['Format']]
-    ProductInches['Height (m)'] = np.cos(ProductInches['Angle']) * ProductInches['New Diagonal (inches)'] * \
-        0.0254 + 2*ProductSize['Border_H (in mm)']/1000 + 2*ProductSize['Exclusion (in mm)']/1000
-    ProductInches['Width (m)'] = np.sin(ProductInches['Angle']) * ProductInches['New Diagonal (inches)'] * \
-        0.0254 + 2*ProductSize['Border_V (in mm)']/1000 + 2*ProductSize['Exclusion (in mm)']/1000
+    ProductInches['Height (m)'] = np.cos(ProductInches['Angle']) * \
+        ProductInches['New Diagonal (inches)'] * 0.0254 + 2*ProductSize['Border_H (in mm)']/1000 + \
+        2*ProductSize['Exclusion (in mm)']/1000
+    ProductInches['Width (m)'] = np.sin(ProductInches['Angle']) * \
+        ProductInches['New Diagonal (inches)'] * 0.0254 + 2*ProductSize['Border_V (in mm)']/1000 + \
+        2*ProductSize['Exclusion (in mm)']/1000
 
     # Prices per product over time including the uncertainty
     bandwidths_prices = [0.8, 1, 1.2]
@@ -95,7 +92,6 @@ def generateData(path):
 
     Depreciation = pd.DataFrame(Depreciation, index=[0])
 
-    # Construct results
     return {"ProductSize": ProductInches,
             "ProductFormat": ProductFormat,
             "ProductPrice": Price,

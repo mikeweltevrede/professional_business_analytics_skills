@@ -70,31 +70,20 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
                              'num_height': num_height_vert,
                              'num_products': num_products_vert,
                              'product_orientation': 'vert'}
-    ## Profit Table
+    # Profit Table
     COS11 = {} #Costs per substate per time (cost for alle products equal)
     Sales11 = {} #Sales per substrate per product per time
     Profit1 = {} # Is product profitable?
-    Profit2 = {}
-    Ratio = {}
+    
     for t in range(Time):
         for p in range(Products):
-            COS11[t] = (1/Scenarios)*sum(Data[s]['SubstrateCost'].iloc[0, t]*(w*h) for s in range(Scenarios))
-                    
-            Sales11[p ,t] = (1/Scenarios)*sum(Data[s]['ProductPrice'].iloc[p, t+2] *Data[s]['Yield'].iloc[p, t+4]*PoS[s][p]['num_products'] for s in range(Scenarios))
-                      
-            Profit1[p ,t] = Sales11[p, t] - COS11[t]
-            if Profit1[p ,t] > 0:
-                Profit2[p, t] = Profit1[p, t]
-            else: 
-                Profit2[p, t] = 0
-    for t in range(Time):
-        for p in range(Products):                
-            if sum(Profit2[p, t] for p in range(Products)) > 0: # Eerste twee jaar deel je anders door 0, want yield is 0
-                Ratio[p, t] = Profit2[p, t]/sum(Profit2[p, t] for p in range(Products))
-            else:
-                Ratio[p, t] = 0
-           
-            
+            COS11[t] = (1/Scenarios)*sum(Data[s]['SubstrateCost'].iloc[0, t]*(w*h)
+                                         for s in range(Scenarios))
+            Sales11[p ,t] = (1/Scenarios)*sum(Data[s]['ProductPrice'].iloc[p, t+2] * \
+                                              Data[s]['Yield'].iloc[p, t+4] * \
+                                                  PoS[s][p]['num_products']
+                                                  for s in range(Scenarios))
+            Profit1[p, t] = Sales11[p, t] - COS11[t]
     
     # INITIALIZE MODEL
     m = gb.Model('PBAS')
@@ -124,32 +113,25 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
                     ['MaxCapacity']*12, name='Yearly Substrate Capacity')
 
     if option == 2:
+        # Per market, check if there is any positive profitability. If so, require that at least a
+        # certain percentage of the production is in that market. In effect, this means that the
+        # most profitable product in that market gets produced.
         for t in range(Time):
             for p in Notebook:
                 if Profit1[p, t] > 0:
                     m.addConstr(quicksum(x[p, t] for p in Notebook) >=
                         product_thresholds['notebooks']*Data[0]['MaxCapacity']*12)
+                    break # We only need one product to be profitable to add this constraint
             for p in Monitor:
                 if Profit1[p, t] > 0:
                     m.addConstr(quicksum(x[p, t] for p in Monitor) >=
                         product_thresholds['monitors']*Data[0]['MaxCapacity']*12)
+                    break # Dito
             for p in Television:
                 if Profit1[p, t] > 0:
                     m.addConstr(quicksum(x[p, t] for p in Television) >=
                         product_thresholds['televisions']*Data[0]['MaxCapacity']*12)
-                    
-                    
-                
-
-                    
-                    
-#        for t in range(2, Time):  # Start at t = 2, yield for t = 0 and 1 is equal to 0
-#            m.addConstr(quicksum(x[p, t] for p in Notebook) >=
-#                        product_thresholds['notebooks']*Data[0]['MaxCapacity']*12)
-#            m.addConstr(quicksum(x[p, t] for p in Monitor) >=
-#                        product_thresholds['monitors']*Data[0]['MaxCapacity']*12)
-#            m.addConstr(quicksum(x[p, t] for p in Television) >=
-#                        product_thresholds['televisions']*Data[0]['MaxCapacity']*12)
+                    break # Dito
 
     if option == 3:
         for p in range(Products):
@@ -159,6 +141,7 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
     for s in range(Scenarios):
         CCC[s] = (Data[s]['DIO']+Data[s]['DSO']-Data[s]['DPO'])/365
         DWC[s, 0] = WC[s, 0]
+        
         for t in range(Time):
             m.addConstr(Sales[s, t] == quicksum(
                 Data[s]['ProductPrice'].iloc[p, t+2] *
@@ -186,8 +169,6 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
         for t in range(1, Time):
             DWC[s, t] = WC[s, t-1]-WC[s, t]
 
-
-        
         NPVperScenario[s] = quicksum(NPV[s, t] for t in range(Time))
         
     # OBJECTIVE
@@ -207,16 +188,19 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
         if NPVperScenario[s].getValue() < 0:
             NegativeScenario = NegativeScenario + 1
 
-    ##Production Table        
-    ProductProduction = pd.DataFrame(np.zeros((Products,Time)), index = Data[0]['Yield']['Format'],
-                                     columns =Data[0]['InvestmentCost'].columns)
-    TotalProduction = pd.DataFrame(np.zeros((1,Time)), index = ['Total Production'], 
-                                   columns = Data[0]['InvestmentCost'].columns )
+    # Production Table        
+    ProductProduction = pd.DataFrame(np.zeros((Products,Time)), index=Data[0]['Yield']['Format'],
+                                     columns=Data[0]['InvestmentCost'].columns)
+    TotalProduction = pd.DataFrame(np.zeros((1,Time)), index=['Total Production'], 
+                                   columns=Data[0]['InvestmentCost'].columns)
+    
     for p in range(Products):
         for t in range(Time):
             ProductProduction.iloc[p, t] = int(x[p, t].x)
+            
     for t in range(Time):
         TotalProduction.iloc[0, t] = int(quicksum(x[p, t].x for p in range(Products)).getValue())
+        
     Production = pd.concat([ProductProduction, TotalProduction])
 
     # ELEMENTS PROFIT AND LOSS STATEMENT
@@ -270,4 +254,3 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
             '#NegativeScenarios': NegativeScenario,
             'PL': PL,
             'Production':Production}
-(1/Scenarios)*sum(Data[s]['Yield'].values[1,6] for s in range(Scenarios))
