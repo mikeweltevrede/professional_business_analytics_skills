@@ -1,10 +1,8 @@
 from DataFunction import generateData
 from NPVFunction import NPV_SAA
-from MAIN import main
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 
 # Determined optimal width and height from previous analysis
 width = 1.85
