@@ -72,26 +72,26 @@ if __name__ == "__main__":  # This means that running this script will run the c
         with open(data500_path, "wb") as data:
             pickle.dump(Data500, data)
 
-    # # Option 1: Maximise profit
-    # print('RUN OPTION 1')
+    # Option 1: Maximise profit
+    print('RUN OPTION 1')
     
-    # # Run full grid (1.80-1.85 (0.05) x 1.55-1.00 (0.05))
-    # main(Data500, option=1,
-    #      output_path1="output/NPV Table_option1.csv",
-    #      output_path2="output/NPVmax Table_option1.csv",
-    #      output_path3="output/NPVmin Table_option1.csv",
-    #      output_path4="output/NPVpos Table_option1.csv")
+    # Run full grid (1.80-1.85 (0.05) x 1.55-1.00 (0.05))
+    main(Data500, option=1,
+          output_path1="output/NPV Table_option1.csv",
+          output_path2="output/NPVmax Table_option1.csv",
+          output_path3="output/NPVmin Table_option1.csv",
+          output_path4="output/NPVpos Table_option1.csv")
 
-    # Option 2: Each market should constitute at least a certain amount of the production
-    print('RUN OPTION 2')
+    # # Option 2: Each market should constitute at least a certain amount of the production
+    # print('RUN OPTION 2')
     
-    # Construct the thresholds based on reverse product size
-    min_percentage = 0.01
-    means = Data1000[0]['ProductSize'].groupby('Market')['Size (inches)'].agg(np.mean)
-    reversemeans = (1-means/sum(means))
+    # # Construct the thresholds based on reverse product size
+    # min_percentage = 0.01
+    # means = Data1000[0]['ProductSize'].groupby('Market')['Size (inches)'].agg(np.mean)
+    # reversemeans = (1-means/sum(means))
 
-    # Scale such that minimum is min_percentage%
-    reversemeans_scaled = reversemeans/(min(reversemeans)/min_percentage)
+    # # Scale such that minimum is min_percentage%
+    # reversemeans_scaled = reversemeans/(min(reversemeans)/min_percentage)
 
     # # Run full grid (1.80-1.85 (0.05) x 1.55-1.00 (0.05))
     # main(Data500, option=2,
@@ -104,27 +104,27 @@ if __name__ == "__main__":  # This means that running this script will run the c
     #                                       'monitors': reversemeans_scaled['Monitor'],
     #                                       'televisions': reversemeans_scaled['Television']})
 
-    # Run zoomed-in on 2nd most profitable (bottom left corner) for more scenarios
-    main(Data1000, option=2,
-         output_path1=f"output/NPV Table_option2_{min_percentage}_2ndmostprofit.csv",
-         output_path2=f"output/NPVmax Table_option2_{min_percentage}_2ndmostprofit.csv",
-         output_path3=f"output/NPVmin Table_option2_{min_percentage}_2ndmostprofit.csv",
-         output_path4=f"output/NPVpos Table_option2_{min_percentage}_2ndmostprofit.csv",
-         max_height=1.15, max_width=1.85, stepsize_height=0.01, stepsize_width=0.01, num_height=11,
-         num_width=1, product_thresholds={'notebooks': reversemeans_scaled['Notebook'],
-                                          'monitors': reversemeans_scaled['Monitor'],
-                                          'televisions': reversemeans_scaled['Television']})
+    # # Run zoomed-in on 2nd most profitable (bottom left corner) for more scenarios
+    # main(Data1000, option=2,
+    #      output_path1=f"output/NPV Table_option2_{min_percentage}_2ndmostprofit.csv",
+    #      output_path2=f"output/NPVmax Table_option2_{min_percentage}_2ndmostprofit.csv",
+    #      output_path3=f"output/NPVmin Table_option2_{min_percentage}_2ndmostprofit.csv",
+    #      output_path4=f"output/NPVpos Table_option2_{min_percentage}_2ndmostprofit.csv",
+    #      max_height=1.15, max_width=1.85, stepsize_height=0.01, stepsize_width=0.01, num_height=11,
+    #      num_width=1, product_thresholds={'notebooks': reversemeans_scaled['Notebook'],
+    #                                       'monitors': reversemeans_scaled['Monitor'],
+    #                                       'televisions': reversemeans_scaled['Television']})
 
-    # Run zoomed-in on least costly (bottom middle) for more scenarios
-    main(Data1000, option=2,
-         output_path1=f"output/NPV Table_option2_{min_percentage}_leastcost.csv",
-         output_path2=f"output/NPVmax Table_option2_{min_percentage}_leastcost.csv",
-         output_path3=f"output/NPVmin Table_option2_{min_percentage}_leastcost.csv",
-         output_path4=f"output/NPVpos Table_option2_{min_percentage}_leastcost.csv",
-         max_height=1.1, max_width=1.8, stepsize_height=0.01, stepsize_width=0.01, num_height=6,
-         num_width=6, product_thresholds={'notebooks': reversemeans_scaled['Notebook'],
-                                          'monitors': reversemeans_scaled['Monitor'],
-                                          'televisions': reversemeans_scaled['Television']})
+    # # Run zoomed-in on least costly (bottom middle) for more scenarios
+    # main(Data1000, option=2,
+    #      output_path1=f"output/NPV Table_option2_{min_percentage}_leastcost.csv",
+    #      output_path2=f"output/NPVmax Table_option2_{min_percentage}_leastcost.csv",
+    #      output_path3=f"output/NPVmin Table_option2_{min_percentage}_leastcost.csv",
+    #      output_path4=f"output/NPVpos Table_option2_{min_percentage}_leastcost.csv",
+    #      max_height=1.1, max_width=1.8, stepsize_height=0.01, stepsize_width=0.01, num_height=6,
+    #      num_width=6, product_thresholds={'notebooks': reversemeans_scaled['Notebook'],
+    #                                       'monitors': reversemeans_scaled['Monitor'],
+    #                                       'televisions': reversemeans_scaled['Television']})
 
     # # Option 3: Each product should constitute at least a certain amount of the production
     # print('RUN OPTION 3')
@@ -138,22 +138,4 @@ if __name__ == "__main__":  # This means that running this script will run the c
     #       output_path4=f"output/NPVpos Table_option3_{threshold}.csv",
     #       max_height=1.55, max_width=1.85, stepsize_height=0.05, stepsize_width=0.01, num_height=12,
     #       num_width=6, product_thresholds=threshold)
-
-    # # Run zoomed-in on most profitable (top left corner) for more scenarios
-    # main(Data1000, option=3,
-    #       output_path1=f"output/NPV Table_option3_{threshold}_mostprofit.csv",
-    #       output_path2=f"output/NPVmax Table_option3_{threshold}_mostprofit.csv",
-    #       output_path3=f"output/NPVmin Table_option3_{threshold}_mostprofit.csv",
-    #       output_path4=f"output/NPVpos Table_option3_{threshold}_mostprofit.csv",
-    #       max_height=1.55, max_width=1.85, stepsize_height=0.05, stepsize_width=0.01, num_height=3,
-    #       num_width=3, product_thresholds=threshold)
-
-    # # Run zoomed-in on least costly (bottom right corner) for more scenarios
-    # main(Data1000, option=3,
-    #       output_path1=f"output/NPV Table_option3_{threshold}_leastcost.csv",
-    #       output_path2=f"output/NPVmax Table_option3_{threshold}_leastcost.csv",
-    #       output_path3=f"output/NPVmin Table_option3_{threshold}_leastcost.csv",
-    #       output_path4=f"output/NPVpos Table_option3_{threshold}_leastcost.csv",
-    #       max_height=1.1, max_width=1.82, stepsize_height=0.05, stepsize_width=0.01, num_height=3,
-    #       num_width=3, product_thresholds=threshold)
     
