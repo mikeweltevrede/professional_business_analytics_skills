@@ -2,10 +2,11 @@ __pycache__
 .ipynb_checkpoints
 .vscode
 
-Logo
-Project Plan
-Scoping & Acquisition
-Slides
-Untitled.ipynb
+Logo/
+output/
+Project Plan/
+Scoping & Acquisition/
+Slides/
 
+*.ipynb
 gurobi.log
