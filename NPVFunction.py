@@ -216,15 +216,29 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
             PriceProducts.iloc[p, t] = ((1/Scenarios)*sum(Data[s]['ProductPrice'].iloc[p, t+2] 
                                         for s in range(Scenarios)))
     
+    ###Glass loss
+    AverageProductWidth = [(1/Scenarios)*sum(Data[s]['ProductSize'].loc[p, 'Width (m)']
+                            for s in range(Scenarios)) for p in range(Products)]
+    AverageProductHeight = [(1/Scenarios)*sum(Data[s]['ProductSize'].loc[p, 'Height (m)']
+                            for s in range(Scenarios)) for p in range(Products)]        
+
+    GlassLossPr = [((w*h)-(1/Scenarios)*sum(PoS[s][p]['num_products'] 
+                    for s in range(Scenarios))*AverageProductWidth[p]*AverageProductHeight[p])/(w*h) 
+                        for p in range(Products)]
+    TotalGlassLoss = (np.zeros((Time)))
+    for t in range(2,Time):
+        TotalGlassLoss[t] = sum(GlassLossPr[p]*x[p, t].x for p in range(Products))/TotalProduction.iloc[0, t]
+
+                                
+    
     # ELEMENTS PROFIT AND LOSS STATEMENT
     PL = collections.defaultdict(dict)
     for t in range(Time):
         PL[t]['ProductPrice'] = [((1/Scenarios)*quicksum(Data[s]['ProductPrice'].iloc[p, t+2]
                                                          for s in range(Scenarios))).getValue()
                                  for p in range(Products)]  # Price per product
-        PL[t]['NumberofProductsSold'] = [((1/Scenarios)*quicksum(PoS[s][p]['num_products']
-                                                             for s in range(Scenarios))).getValue()
-                                     for p in range(Products)]
+        PL[t]['PercentageGlassLoss'] = TotalGlassLoss[t]
+        PL[t]['NumberofProductsSold'] = [NumberofProducts.iloc[p, t] for p in range(Products)]
         PL[t]['SubstrateCost'] = ((1/Scenarios)*sum(Data[s]['SubstrateCost'].iloc[0, t]*(w*h)
                                                     for s in range(Scenarios)))
         PL[t]['SALES'] = ((1/Scenarios)*quicksum(Sales[s, t].X
@@ -257,7 +271,7 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
         PL[t]['CCC'] = (1/Scenarios)*(quicksum(CCC[s] for s in range(Scenarios))).getValue()
         PL[t]['NPV'] = ((1/Scenarios)*quicksum(NPV[s, t].getValue()
                                                for s in range(Scenarios))).getValue()
-
+                
     return {'Average NPV': obj.getValue(),
             'NPVmax': NPVmax,
             'NPVmin': NPVmin,
