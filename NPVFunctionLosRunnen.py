@@ -286,9 +286,11 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
                                                for s in range(Scenarios))).getValue()
         PL[t]['DWC'] = (1/Scenarios)*(quicksum(DWC[s, t] for s in range(Scenarios))).getValue()
 
-    pd.DataFrame(PL).to_csv("PL/PL exclusief #Products and Price.csv")
-    PriceProducts.to_csv("PL/PL Price per Product.csv")
-    NumberofProducts.to_csv("PL/PL #Products.csv")
+    pd.DataFrame(PL).to_excel("PL/PL.xlsx")
+    PriceProducts.to_excel("PL/PL_ProductPrice.xlsx")
+    NumberofProducts.to_excel("PL/PL_#Products.xlsx")
+
+        
     return {'Average NPV': obj.getValue(),
             'NPVmax': NPVmax,
             'NPVmin': NPVmin,
