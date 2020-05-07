@@ -99,11 +99,11 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
     COS2 = m.addVars(Scenarios, Time, vtype=gb.GRB.CONTINUOUS,
                      name='Cost of Sales without depreciation')
     NI = m.addVars(Scenarios, Time, vtype=gb.GRB.CONTINUOUS, name='Net Income')
-    NCF = m.addVars(Scenarios, Time, vtype=gb.GRB.CONTINUOUS, name='Net Cash Flow')
-    NPV = m.addVars(Scenarios, Time, vtype=gb.GRB.CONTINUOUS, name='Net Present Value')
+    NCF = m.addVars(Scenarios, Time+1, vtype=gb.GRB.CONTINUOUS, name='Net Cash Flow')
+    NPV = m.addVars(Scenarios, Time+1, vtype=gb.GRB.CONTINUOUS, name='Net Present Value')
     CCC = m.addVars(Scenarios, vtype=gb.GRB.CONTINUOUS, name='Cash Conversion Cycle')
     WC = m.addVars(Scenarios, Time, vtype=gb.GRB.CONTINUOUS, name='Working Capital')
-    DWC = m.addVars(Scenarios, Time, vtype=gb.GRB.CONTINUOUS, name='Delta Working Capital')
+    DWC = m.addVars(Scenarios, Time+1, vtype=gb.GRB.CONTINUOUS, name='Delta Working Capital')
     NPVperScenario = m.addVars(Scenarios, vtype=gb.GRB.CONTINUOUS, name='NPV per Scenario')
 
     # CONSTRAINTS
@@ -172,10 +172,14 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
 
             NPV[s, t] = NCF[s, t]/((1+Data[s]['WACC'])**t)
 
-        NPVperScenario[s] = quicksum(NPV[s, t] for t in range(Time))
-
+        
+    for s in range(Scenarios):
+        DWC[s, Time] = -WC[s, Time-1]
+        NCF[s, Time] = -DWC[s, Time]
+        NPV[s, Time] = NCF[s, Time]/((1+Data[s]['WACC'])**Time)
+        NPVperScenario[s] = quicksum(NPV[s, t] for t in range(Time+1))
     # OBJECTIVE
-    obj = (1/Scenarios)*quicksum(quicksum(NPV[s, t] for s in range(Scenarios)) for t in range(Time))
+    obj = (1/Scenarios)*quicksum(quicksum(NPV[s, t] for s in range(Scenarios)) for t in range(Time+1))
     m.setObjective(obj, gb.GRB.MAXIMIZE)
 
     # RUN OPTIMIZATION
@@ -238,11 +242,11 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
     # ELEMENTS PROFIT AND LOSS STATEMENT
     PL = collections.defaultdict(dict)
     for t in range(Time):
-        PL[t]['ProductPrice'] = [((1/Scenarios)*quicksum(Data[s]['ProductPrice'].iloc[p, t+2]
-                                                         for s in range(Scenarios))).getValue()
-                                 for p in range(Products)]  # Price per product
+#        PL[t]['ProductPrice'] = [((1/Scenarios)*quicksum(Data[s]['ProductPrice'].iloc[p, t+2]
+#                                                         for s in range(Scenarios))).getValue()
+#                                 for p in range(Products)]  # Price per product
         PL[t]['PercentageGlassLoss'] = TotalGlassLoss[t]
-        PL[t]['NumberofProductsSold'] = [NumberofProducts.iloc[p, t] for p in range(Products)]
+#        PL[t]['NumberofProductsSold'] = [NumberofProducts.iloc[p, t] for p in range(Products)]
         PL[t]['SubstrateCost'] = ((1/Scenarios)*sum(Data[s]['SubstrateCost'].iloc[0, t]*(w*h)
                                                     for s in range(Scenarios)))
         PL[t]['SALES'] = ((1/Scenarios)*quicksum(Sales[s, t].X
@@ -263,19 +267,26 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
                                                for s in range(Scenarios))).getValue()
         PL[t]['NI'] = ((1/Scenarios)*quicksum(NI[s, t].getValue()
                                               for s in range(Scenarios))).getValue()
-        PL[t]['DWC'] = (1/Scenarios)*(quicksum(DWC[s, t] for s in range(Scenarios))).getValue()
+#        PL[t]['DWC'] = (1/Scenarios)*(quicksum(DWC[s, t] for s in range(Scenarios))).getValue()
         PL[t]['WC'] = ((1/Scenarios)*quicksum(WC[s, t].getValue()
                                               for s in range(Scenarios))).getValue()
         PL[t]['Depreciation'] = ((1/Scenarios)*quicksum(Data[s]['Depreciation'].iloc[0, t]
                                                         for s in range(Scenarios))).getValue()
         PL[t]['CAPEX'] = ((1/Scenarios)*quicksum(Data[s]['InvestmentCost'].iloc[0, t]
                                                  for s in range(Scenarios))).getValue()
-        PL[t]['NCF'] = ((1/Scenarios)*quicksum(NCF[s, t].getValue()
-                                               for s in range(Scenarios))).getValue()
+#        PL[t]['NCF'] = ((1/Scenarios)*quicksum(NCF[s, t].getValue()
+#                                               for s in range(Scenarios))).getValue()
         PL[t]['CCC'] = (1/Scenarios)*(quicksum(CCC[s] for s in range(Scenarios))).getValue()
+#        PL[t]['NPV'] = ((1/Scenarios)*quicksum(NPV[s, t].getValue()
+#                                               for s in range(Scenarios))).getValue()
+    for t in range(Time+1):
         PL[t]['NPV'] = ((1/Scenarios)*quicksum(NPV[s, t].getValue()
                                                for s in range(Scenarios))).getValue()
-                
+        PL[t]['NCF'] = ((1/Scenarios)*quicksum(NCF[s, t].getValue()
+                                               for s in range(Scenarios))).getValue()
+        PL[t]['DWC'] = (1/Scenarios)*(quicksum(DWC[s, t] for s in range(Scenarios))).getValue()
+
+#    pd.DataFrame(PL).to_csv("PL/PL exclusief #Products and Price.csv")              
     return {'Average NPV': obj.getValue(),
             'NPVmax': NPVmax,
             'NPVmin': NPVmin,
