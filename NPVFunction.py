@@ -138,9 +138,6 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
                 m.addConstr(x[p, t] >= product_thresholds*Data[0]['MaxCapacity']*12)
 
     for s in range(Scenarios):
-        CCC[s] = (Data[s]['DIO']+Data[s]['DSO']-Data[s]['DPO'])/365
-        DWC[s, 0] = WC[s, 0]
-
         for t in range(Time):
             m.addConstr(Sales[s, t] == quicksum(
                 Data[s]['ProductPrice'].iloc[p, t+2] *
@@ -155,18 +152,25 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
             m.addConstr(COS2[s, t] == quicksum(
                 Data[s]['SubstrateCost'].iloc[0, t]*(w*h)*x[p, t] for p in range(Products)),
                 name='Cost of Sales without depreciation')
+        
+        # Continue for loop over s for variables
+        CCC[s] = (Data[s]['DIO']+Data[s]['DSO']-Data[s]['DPO'])/365
+        DWC[s, 0] = WC[s, 0]
 
+        for t in range(Time):
             GM[s, t] = Sales[s, t]-CostofSales[s, t]
             OM[s, t] = GM[s, t] - Sales[s, t]*(Data[s]['R&D']+Data[s]['SG&A'])
             NI[s, t] = (1-Data[s]['TaxRate'])*OM[s, t]
             WC[s, t] = Sales[s, t]*CCC[s]
+
+        for t in range(1, Time):
+            DWC[s, t] = WC[s, t]-WC[s, t-1]
+            
+        for t in range(Time):
             NCF[s, t] = (NI[s, t] + Data[s]['Depreciation'].iloc[0, t] - DWC[s, t] -
                          Data[s]['InvestmentCost'].iloc[0, t])
 
             NPV[s, t] = NCF[s, t]/((1+Data[s]['WACC'])**t)
-
-        for t in range(1, Time):
-            DWC[s, t] = WC[s, t-1]-WC[s, t]
 
         NPVperScenario[s] = quicksum(NPV[s, t] for t in range(Time))
 
