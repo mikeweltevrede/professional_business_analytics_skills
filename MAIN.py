@@ -44,11 +44,28 @@ def main(Data, output_path1=None, output_path2=None, output_path3=None, output_p
 if __name__ == "__main__":  # This means that running this script will run the code below
 
     # Create data
+    seed = 42
     data1000_path = "data/data1000.pkl"
+    data500_path = f"data/data500_seed{seed}.pkl"
     if os.path.isfile(data1000_path):
         # Then this file already exists and can be imported
         with open(data1000_path, "rb") as data:
             Data1000 = pickle.load(data)
+            
+        
+        if os.path.isfile(data500_path):
+            # Then this file already exists and can be imported - we assume they are concurrent
+            with open(data500_path, "rb") as data:
+                Data500 = pickle.load(data)
+        else:
+            # This file needs to be created
+            random.seed(seed)
+            keys = random.sample(list(Data1000.keys()), num_scenarios//2)
+            Data500 = {i: Data1000[keys[i]] for i in range(len(keys))}
+    
+            with open(data500_path, "wb") as data:
+                pickle.dump(Data500, data)
+            
     else:
         num_scenarios = 1000
         data_path = "data/DataPBAS.xlsx"
@@ -56,15 +73,8 @@ if __name__ == "__main__":  # This means that running this script will run the c
 
         with open(data1000_path, "wb") as data:
             pickle.dump(Data1000, data)
-
-    seed = 42
-    data500_path = f"data/data500_seed{seed}.pkl"
-    if os.path.isfile(data500_path):
-        # Then this file already exists and can be imported
-        with open(data500_path, "rb") as data:
-            Data500 = pickle.load(data)
-    else:
-        # This file needs to be created
+            
+        # Then also the subsample needs to be recreated
         random.seed(seed)
         keys = random.sample(list(Data1000.keys()), num_scenarios//2)
         Data500 = {i: Data1000[keys[i]] for i in range(len(keys))}
