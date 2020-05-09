@@ -3,13 +3,13 @@ import numpy as np
 import pandas as pd
 
 
-def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv = [-2, 0, 1],
-                 bandwidths_prices = [0.8, 1, 1.2], bandwidths_substrate_prices = [0.9, 1, 1.1],
-                 bandwidths_investment = [0.9, 1, 1.1], bandwidths_yield = [-0.15, 0, 0.02],
-                 bandwidths_rd = [0.04, 0.05, 0.11], bandwidths_sga = [0.03, 0.04, 0.05],
-                 bandwidths_tax = [0.20, 0.25, 0.30], bandwidths_dpo = [35, 45, 55],
-                 bandwidths_dso = [35, 45, 55], bandwidths_dio = [20, 30, 40], max_width = 1.85,
-                 max_height = 1.55):
+def generateData(path, probability={'all': [0.25, 0.5, 0.25]}, bandwidths_tv=[-2, 0, 1],
+                 bandwidths_prices=[0.8, 1, 1.2], bandwidths_substrate_prices=[0.9, 1, 1.1],
+                 bandwidths_investment=[0.9, 1, 1.1], bandwidths_yield=[-0.15, 0, 0.02],
+                 bandwidths_rd=[0.04, 0.05, 0.11], bandwidths_sga=[0.03, 0.04, 0.05],
+                 bandwidths_tax=[0.20, 0.25, 0.30], bandwidths_dpo=[35, 45, 55],
+                 bandwidths_dso=[35, 45, 55], bandwidths_dio=[20, 30, 40], max_width=1.85,
+                 max_height=1.55):
     """
     Imports the data and constructs a random instance
 
@@ -58,7 +58,7 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
     -------
     KeyError
         When the year for depreciation is not yet initialized, create it
-    """ 
+    """
 
     results = {}
 
@@ -76,18 +76,18 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
 
     # ProductInches including the uncertainty for TV screen size
     ProductInches = ProductMeta.copy()
-    
+
     try:
         tv_selection = np.random.choice(bandwidths_tv, num_products, p=probability['tv'])
     except KeyError:
         tv_selection = np.random.choice(bandwidths_tv, num_products, p=probability['all'])
-    
+
     # (ProductInches['Market'] == 'Television') is a boolean indicator for whether the product
     # is a television. If multiplied, True is treated as 1 and False is treated as 0. As such,
     # we only add the outcomes of the random selection to the televisions
     ProductInches['New Diagonal (inches)'] = ProductInches['Size (inches)'] + \
         tv_selection * (ProductInches['Market'] == 'Television')
-    
+
     ProductInches['Angle'] = [math.atan(ProductFormat.loc[0, formt] / ProductFormat.loc[1, formt])
                               for formt in ProductInches['Format']]
     ProductInches['Height (m)'] = np.cos(ProductInches['Angle']) * \
@@ -107,7 +107,7 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
     original_width = np.sin(ProductInches['Angle']) * \
         ProductInches['Size (inches)'] * 0.0254 + 2*ProductSize['Border_V (in mm)']/1000 + \
         2*ProductSize['Exclusion (in mm)']/1000
-    
+
     original_area = original_height * original_width
     new_area = ProductInches['Height (m)'] * ProductInches['Width (m)']
     area_change = new_area/original_area
@@ -115,14 +115,14 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
     # Prices per product over time including the uncertainty
     Price = pd.merge(ProductMeta.copy(), pd.read_excel(Data, "Price").drop(
         columns='Unit'), on=['Size (inches)', 'Format', 'Market'])
-    
+
     try:
         prices_selection = np.random.choice(bandwidths_prices, Price.iloc[:, 3:].shape,
                                             p=probability['prices'])
     except KeyError:
         prices_selection = np.random.choice(bandwidths_prices, Price.iloc[:, 3:].shape,
                                             p=probability['all'])
-        
+
     Price = pd.concat([Price.iloc[:, :2],
                        (Price.iloc[:, 3:] * prices_selection).multiply(area_change, axis="index")],
                       axis=1)
@@ -139,13 +139,13 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
         substrate_prices_selection = np.random.choice(bandwidths_substrate_prices,
                                                       len(CostSubstrate.columns[3:]),
                                                       p=probability['all'])
-        
+
     CostSubstrate = CostSubstrate.iloc[:, 3:] * substrate_prices_selection
     CostSubstrate = CostSubstrate.fillna(0)
-    
+
     results["substrate_prices_selection"] = substrate_prices_selection
     results["SubstrateCost"] = CostSubstrate
-    
+
     # Investment costs over time including the uncertainty
     try:
         investment_selection = np.random.choice(bandwidths_investment,
@@ -155,7 +155,7 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
         investment_selection = np.random.choice(bandwidths_investment,
                                                 len(CostInvestment.columns[3:]),
                                                 p=probability['all'])
-        
+
     CostInvestment = 1e6 * CostInvestment.iloc[:, 3:] * investment_selection
     CostInvestment = CostInvestment.fillna(0)
 
@@ -164,21 +164,21 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
 
     # Yield per market over time including the uncertainty
     Yield = Yield.drop(columns=["Blaco", "Blanco"]).copy()
-    
+
     try:
         yield_selection = np.random.choice(bandwidths_yield, (Yield.shape[0], Yield.shape[1]-1),
                                            p=probability['yield'])
     except KeyError:
         yield_selection = np.random.choice(bandwidths_yield, (Yield.shape[0], Yield.shape[1]-1),
                                            p=probability['all'])
-        
+
     Yield = pd.concat([Yield['Yieldpermarket'], Yield.iloc[:, 1:] + yield_selection], axis=1)
     Yield = pd.merge(ProductMeta, Yield, left_on='Market', right_on='Yieldpermarket', how='left')
     Yield = Yield.fillna(0)
-    
+
     results["yield_selection"] = yield_selection
     results["Yield"] = Yield
-    
+
     # Depreciation over time
     Depreciation = {}
     depreciation_period = int(Parameters.loc['Depreciation years', 'Cost'])
@@ -206,12 +206,12 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
         results["SG&A"] = np.random.choice(bandwidths_sga, 1, p=probability['SG&A']).item()
     except KeyError:
         results["SG&A"] = np.random.choice(bandwidths_sga, 1, p=probability['all']).item()
-        
+
     try:
         results["TaxRate"] = np.random.choice(bandwidths_tax, 1, p=probability['TaxRate']).item()
     except KeyError:
         results["TaxRate"] = np.random.choice(bandwidths_tax, 1, p=probability['all']).item()
-        
+
     try:
         results["DPO"] = np.random.choice(bandwidths_dpo, 1, p=probability['DPO']).item()
     except KeyError:
@@ -221,7 +221,7 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
         results["DSO"] = np.random.choice(bandwidths_dso, 1, p=probability['DSO']).item()
     except KeyError:
         results["DSO"] = np.random.choice(bandwidths_dso, 1, p=probability['all']).item()
-        
+
     try:
         results["DIO"] = np.random.choice(bandwidths_dio, 1, p=probability['DIO']).item()
     except KeyError:
