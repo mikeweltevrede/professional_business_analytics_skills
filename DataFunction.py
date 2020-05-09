@@ -1,7 +1,6 @@
+import math
 import numpy as np
 import pandas as pd
-import statistics as st
-import math
 
 
 def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv = [-2, 0, 1],
@@ -61,6 +60,8 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
         When the year for depreciation is not yet initialized, create it
     """ 
 
+    results = {}
+
     Data = pd.ExcelFile(path)
     ProductSize = pd.read_excel(Data, "ProductSize")
     ProductFormat = pd.read_excel(Data, "ProductFormat")
@@ -77,16 +78,15 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
     ProductInches = ProductMeta.copy()
     
     try:
-        # (ProductInches['Market'] == 'Television') is a boolean indicator for whether the product
-        # is a television. If multiplied, True is treated as 1 and False is treated as 0. As such,
-        # we only add the outcomes of the random selection to the televisions
-        ProductInches['New Diagonal (inches)'] = ProductInches['Size (inches)'] + \
-            np.random.choice(bandwidths_tv, num_products, p=probability['tv']) * \
-                (ProductInches['Market'] == 'Television')
+        tv_selection = np.random.choice(bandwidths_tv, num_products, p=probability['tv'])
     except KeyError:
-        ProductInches['New Diagonal (inches)'] = ProductInches['Size (inches)'] + \
-            np.random.choice(bandwidths_tv, num_products, p=probability['all']) * \
-                (ProductInches['Market'] == 'Television')
+        tv_selection = np.random.choice(bandwidths_tv, num_products, p=probability['all'])
+    
+    # (ProductInches['Market'] == 'Television') is a boolean indicator for whether the product
+    # is a television. If multiplied, True is treated as 1 and False is treated as 0. As such,
+    # we only add the outcomes of the random selection to the televisions
+    ProductInches['New Diagonal (inches)'] = ProductInches['Size (inches)'] + \
+        tv_selection * (ProductInches['Market'] == 'Television')
     
     ProductInches['Angle'] = [math.atan(ProductFormat.loc[0, formt] / ProductFormat.loc[1, formt])
                               for formt in ProductInches['Format']]
@@ -97,50 +97,87 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
         ProductInches['New Diagonal (inches)'] * 0.0254 + 2*ProductSize['Border_V (in mm)']/1000 + \
         2*ProductSize['Exclusion (in mm)']/1000
 
+    results["tv_selection"] = tv_selection
+    results["ProductSize"] = ProductInches
+
+    # Compute area change to update prices
+    original_height = np.cos(ProductInches['Angle']) * \
+        ProductInches['Size (inches)'] * 0.0254 + 2*ProductSize['Border_H (in mm)']/1000 + \
+        2*ProductSize['Exclusion (in mm)']/1000
+    original_width = np.sin(ProductInches['Angle']) * \
+        ProductInches['Size (inches)'] * 0.0254 + 2*ProductSize['Border_V (in mm)']/1000 + \
+        2*ProductSize['Exclusion (in mm)']/1000
+    
+    original_area = original_height * original_width
+    new_area = ProductInches['Height (m)'] * ProductInches['Width (m)']
+    area_change = new_area/original_area
+
     # Prices per product over time including the uncertainty
     Price = pd.merge(ProductMeta.copy(), pd.read_excel(Data, "Price").drop(
         columns='Unit'), on=['Size (inches)', 'Format', 'Market'])
     
     try:
-        Price = pd.concat([Price.iloc[:, :2], Price.iloc[:, 3:] * np.random.choice(
-            bandwidths_prices, Price.iloc[:, 3:].shape, p=probability['prices'])], axis=1)
+        prices_selection = np.random.choice(bandwidths_prices, Price.iloc[:, 3:].shape,
+                                            p=probability['prices'])
     except KeyError:
-        Price = pd.concat([Price.iloc[:, :2], Price.iloc[:, 3:] * np.random.choice(
-            bandwidths_prices, Price.iloc[:, 3:].shape, p=probability['all'])], axis=1)
+        prices_selection = np.random.choice(bandwidths_prices, Price.iloc[:, 3:].shape,
+                                            p=probability['all'])
+        
+    Price = pd.concat([Price.iloc[:, :2],
+                       (Price.iloc[:, 3:] * prices_selection).multiply(area_change, axis="index")],
+                      axis=1)
+
+    results["prices_selection"] = prices_selection
+    results["ProductPrice"] = Price
 
     # Cost substrate per m^2 over time including the uncertainty
     try:
-        CostSubstrate = CostSubstrate.iloc[:, 3:] * np.random.choice(
-            bandwidths_substrate_prices, len(CostSubstrate.columns[3:]),
-            p=probability['substrate_prices'])
+        substrate_prices_selection = np.random.choice(bandwidths_substrate_prices,
+                                                      len(CostSubstrate.columns[3:]),
+                                                      p=probability['substrate_prices'])
     except KeyError:
-        CostSubstrate = CostSubstrate.iloc[:, 3:] * np.random.choice(
-            bandwidths_substrate_prices, len(CostSubstrate.columns[3:]), p=probability['all'])
+        substrate_prices_selection = np.random.choice(bandwidths_substrate_prices,
+                                                      len(CostSubstrate.columns[3:]),
+                                                      p=probability['all'])
         
+    CostSubstrate = CostSubstrate.iloc[:, 3:] * substrate_prices_selection
     CostSubstrate = CostSubstrate.fillna(0)
+    
+    results["substrate_prices_selection"] = substrate_prices_selection
+    results["SubstrateCost"] = CostSubstrate
     
     # Investment costs over time including the uncertainty
     try:
-        CostInvestment = 1e6 * CostInvestment.iloc[:, 3:] * np.random.choice(
-            bandwidths_investment, len(CostInvestment.columns[3:]), p=probability['investment'])
+        investment_selection = np.random.choice(bandwidths_investment,
+                                                len(CostInvestment.columns[3:]),
+                                                p=probability['investment'])
     except KeyError:
-        CostInvestment = 1e6 * CostInvestment.iloc[:, 3:] * np.random.choice(
-            bandwidths_investment, len(CostInvestment.columns[3:]), p=probability['all'])
+        investment_selection = np.random.choice(bandwidths_investment,
+                                                len(CostInvestment.columns[3:]),
+                                                p=probability['all'])
         
+    CostInvestment = 1e6 * CostInvestment.iloc[:, 3:] * investment_selection
     CostInvestment = CostInvestment.fillna(0)
+
+    results["investment_selection"] = investment_selection
+    results["InvestmentCost"] = CostInvestment
 
     # Yield per market over time including the uncertainty
     Yield = Yield.drop(columns=["Blaco", "Blanco"]).copy()
     
     try:
-        Yield = pd.concat([Yield['Yieldpermarket'], Yield.iloc[:, 1:] + np.random.choice(
-            bandwidths_yield, (Yield.shape[0], Yield.shape[1]-1), p=probability['yield'])], axis=1)
+        yield_selection = np.random.choice(bandwidths_yield, (Yield.shape[0], Yield.shape[1]-1),
+                                           p=probability['yield'])
     except KeyError:
-        Yield = pd.concat([Yield['Yieldpermarket'], Yield.iloc[:, 1:] + np.random.choice(
-            bandwidths_yield, (Yield.shape[0], Yield.shape[1]-1), p=probability['all'])], axis=1)
+        yield_selection = np.random.choice(bandwidths_yield, (Yield.shape[0], Yield.shape[1]-1),
+                                           p=probability['all'])
         
+    Yield = pd.concat([Yield['Yieldpermarket'], Yield.iloc[:, 1:] + yield_selection], axis=1)
     Yield = pd.merge(ProductMeta, Yield, left_on='Market', right_on='Yieldpermarket', how='left')
     Yield = Yield.fillna(0)
+    
+    results["yield_selection"] = yield_selection
+    results["Yield"] = Yield
     
     # Depreciation over time
     Depreciation = {}
@@ -157,52 +194,43 @@ def generateData(path, probability = {'all': [0.25, 0.5, 0.25]}, bandwidths_tv =
 
     Depreciation = pd.DataFrame(Depreciation, index=[0])
 
+    results["Depreciation"] = Depreciation
+
     # Create final random choices
     try:
-        rd = np.random.choice(bandwidths_rd, 1, p=probability['rd']).item()
+        results["R&D"] = np.random.choice(bandwidths_rd, 1, p=probability['R&D']).item()
     except KeyError:
-        rd = np.random.choice(bandwidths_rd, 1, p=probability['all']).item()
+        results["R&D"] = np.random.choice(bandwidths_rd, 1, p=probability['all']).item()
 
     try:
-        sga = np.random.choice(bandwidths_sga, 1, p=probability['sga']).item()
+        results["SG&A"] = np.random.choice(bandwidths_sga, 1, p=probability['SG&A']).item()
     except KeyError:
-        sga = np.random.choice(bandwidths_sga, 1, p=probability['all']).item()
+        results["SG&A"] = np.random.choice(bandwidths_sga, 1, p=probability['all']).item()
         
     try:
-        tax = np.random.choice(bandwidths_tax, 1, p=probability['tax']).item()
+        results["TaxRate"] = np.random.choice(bandwidths_tax, 1, p=probability['TaxRate']).item()
     except KeyError:
-        tax = np.random.choice(bandwidths_tax, 1, p=probability['all']).item()
+        results["TaxRate"] = np.random.choice(bandwidths_tax, 1, p=probability['all']).item()
         
     try:
-        dpo = np.random.choice(bandwidths_dpo, 1, p=probability['dpo']).item()
+        results["DPO"] = np.random.choice(bandwidths_dpo, 1, p=probability['DPO']).item()
     except KeyError:
-        dpo = np.random.choice(bandwidths_dpo, 1, p=probability['all']).item()
+        results["DPO"] = np.random.choice(bandwidths_dpo, 1, p=probability['all']).item()
 
     try:
-        dso = np.random.choice(bandwidths_dso, 1, p=probability['dso']).item()
+        results["DSO"] = np.random.choice(bandwidths_dso, 1, p=probability['DSO']).item()
     except KeyError:
-        dso = np.random.choice(bandwidths_dso, 1, p=probability['all']).item()
+        results["DSO"] = np.random.choice(bandwidths_dso, 1, p=probability['all']).item()
         
     try:
-        dio = np.random.choice(bandwidths_dio, 1, p=probability['dio']).item()
+        results["DIO"] = np.random.choice(bandwidths_dio, 1, p=probability['DIO']).item()
     except KeyError:
-        dio = np.random.choice(bandwidths_dio, 1, p=probability['all']).item()
+        results["DIO"] = np.random.choice(bandwidths_dio, 1, p=probability['all']).item()
 
-    return {"ProductSize": ProductInches,
-            "ProductFormat": ProductFormat,
-            "ProductPrice": Price,
-            "SubstrateCost": CostSubstrate,
-            "InvestmentCost": CostInvestment,
-            "Yield": Yield,
-            "Depreciation": Depreciation,
-            "MaxCapacity": Parameters.loc['Max capacity', 'Cost'],
-            "R&D": rd,
-            "SG&A": sga,
-            "WACC": Parameters.loc['WACC', 'Cost'],
-            "Depreciation_years": depreciation_period,
-            "Max_width": max_width,
-            "Max_height": max_height,
-            "TaxRate": tax,
-            "DPO": dpo,
-            "DSO": dso,
-            "DIO": dio}
+    # Final necessary data
+    results["MaxCapacity"] = Parameters.loc['Max capacity', 'Cost']
+    results["WACC"] = Parameters.loc['WACC', 'Cost']
+    results["Max_width"] = max_width
+    results["Max_height"] = max_height
+
+    return results
