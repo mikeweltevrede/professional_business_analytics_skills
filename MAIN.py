@@ -21,7 +21,7 @@ def main(Data, output_path1=None, output_path2=None, output_path3=None, output_p
     heights = [max_height-stepsize_height*i for i in range(num_height)]
 
     NPV = pd.DataFrame(np.zeros((num_height, num_width)), index=heights, columns=widths)
-    
+
     if output_path2 is not None:
         NPVmax = NPV.copy()
     if output_path3 is not None:
@@ -40,12 +40,12 @@ def main(Data, output_path1=None, output_path2=None, output_path3=None, output_p
                 NPVmin.values[h, w] = NPV_['NPVmin']
             if output_path4 is not None:
                 NPVpos.values[h, w] = 1-(NPV_['#NegativeScenarios']/len(Data))
-    
+
     if output_path1 is not None:
         NPV.to_csv(output_path1)
     if output_path2 is not None:
         NPVmax.to_csv(output_path2)
-    if output_path3 is not None: 
+    if output_path3 is not None:
         NPVmin.to_csv(output_path3)
     if output_path4 is not None:
         NPVpos.to_csv(output_path4)
@@ -64,8 +64,7 @@ if __name__ == "__main__":  # This means that running this script will run the c
         # Then this file already exists and can be imported
         with open(data1000_path, "rb") as data:
             Data1000 = pickle.load(data)
-            
-        
+
         if os.path.isfile(data500_path):
             # Then this file already exists and can be imported - we assume they are concurrent
             with open(data500_path, "rb") as data:
@@ -75,10 +74,10 @@ if __name__ == "__main__":  # This means that running this script will run the c
             random.seed(seed)
             keys = random.sample(list(Data1000.keys()), num_scenarios//2)
             Data500 = {i: Data1000[keys[i]] for i in range(len(keys))}
-    
+
             with open(data500_path, "wb") as data:
                 pickle.dump(Data500, data)
-            
+
     else:
         num_scenarios = 1000
         data_path = "data/DataPBAS.xlsx"
@@ -86,7 +85,7 @@ if __name__ == "__main__":  # This means that running this script will run the c
 
         with open(data1000_path, "wb") as data:
             pickle.dump(Data1000, data)
-            
+
         # Then also the subsample needs to be recreated
         random.seed(seed)
         keys = random.sample(list(Data1000.keys()), num_scenarios//2)
@@ -102,7 +101,7 @@ if __name__ == "__main__":  # This means that running this script will run the c
 
     # Option 1: Maximise profit
     print('RUN OPTION 1')
-    
+
     # Run full grid (1.60-1.85 (0.05) x 1.00-1.55 (0.05))
     main(Data_baseline, option=1, output_path1="output/NPV_baseline_option1_fullgrid.csv")
     main(Data500, option=1,
@@ -110,10 +109,10 @@ if __name__ == "__main__":  # This means that running this script will run the c
          output_path2="output/NPVmax Table_option1_fullgrid.csv",
          output_path3="output/NPVmin Table_option1_fullgrid.csv",
          output_path4="output/NPVpos Table_option1_fullgrid.csv")
-    
+
     # Option 2: Each market should constitute at least a certain amount of the production
     print('RUN OPTION 2')
-    
+
     # Construct the thresholds based on reverse product size, i.e. smaller products should have a
     # higher percentage because more of these fit on a substrate.
     min_percentage = 0.01
@@ -122,13 +121,13 @@ if __name__ == "__main__":  # This means that running this script will run the c
 
     # Scale such that minimum is min_percentage%
     reversemeans_scaled = reversemeans/(min(reversemeans)/min_percentage)
-    
+
     # Run baseline case
     main(Data_baseline, option=2,
-          output_path1=f"output/NPV_baseline_option2_{min_percentage}_fullgrid.csv",
-          product_thresholds={'notebooks': reversemeans_scaled['Notebook'],
-                              'monitors': reversemeans_scaled['Monitor'],
-                              'televisions': reversemeans_scaled['Television']})
+         output_path1=f"output/NPV_baseline_option2_{min_percentage}_fullgrid.csv",
+         product_thresholds={'notebooks': reversemeans_scaled['Notebook'],
+                             'monitors': reversemeans_scaled['Monitor'],
+                             'televisions': reversemeans_scaled['Television']})
 
     # Run full grid (1.60-1.85 (0.05) x 1.00-1.55 (0.05))
     main(Data500, option=2,
@@ -142,40 +141,39 @@ if __name__ == "__main__":  # This means that running this script will run the c
 
     # Run zoomed-in on 2nd most profitable (bottom left corner) for more scenarios
     main(Data1000, option=2,
-          output_path1=f"output/NPV_option2_{min_percentage}_2ndmostprofit.csv",
-          output_path2=f"output/NPVmax_option2_{min_percentage}_2ndmostprofit.csv",
-          output_path3=f"output/NPVmin_option2_{min_percentage}_2ndmostprofit.csv",
-          output_path4=f"output/NPVpos_option2_{min_percentage}_2ndmostprofit.csv",
-          max_height=1.15, max_width=1.85, stepsize_height=0.01, stepsize_width=0.01, num_height=11,
-          num_width=1, product_thresholds={'notebooks': reversemeans_scaled['Notebook'],
+         output_path1=f"output/NPV_option2_{min_percentage}_2ndmostprofit.csv",
+         output_path2=f"output/NPVmax_option2_{min_percentage}_2ndmostprofit.csv",
+         output_path3=f"output/NPVmin_option2_{min_percentage}_2ndmostprofit.csv",
+         output_path4=f"output/NPVpos_option2_{min_percentage}_2ndmostprofit.csv",
+         max_height=1.15, max_width=1.85, stepsize_height=0.01, stepsize_width=0.01, num_height=11,
+         num_width=1, product_thresholds={'notebooks': reversemeans_scaled['Notebook'],
                                           'monitors': reversemeans_scaled['Monitor'],
                                           'televisions': reversemeans_scaled['Television']})
 
     # Run zoomed-in on least costly (bottom middle) for more scenarios
     main(Data1000, option=2,
-          output_path1=f"output/NPV_option2_{min_percentage}_leastcost.csv",
-          output_path2=f"output/NPVmax_option2_{min_percentage}_leastcost.csv",
-          output_path3=f"output/NPVmin_option2_{min_percentage}_leastcost.csv",
-          output_path4=f"output/NPVpos_option2_{min_percentage}_leastcost.csv",
-          max_height=1.1, max_width=1.8, stepsize_height=0.01, stepsize_width=0.01, num_height=6,
-          num_width=6, product_thresholds={'notebooks': reversemeans_scaled['Notebook'],
+         output_path1=f"output/NPV_option2_{min_percentage}_leastcost.csv",
+         output_path2=f"output/NPVmax_option2_{min_percentage}_leastcost.csv",
+         output_path3=f"output/NPVmin_option2_{min_percentage}_leastcost.csv",
+         output_path4=f"output/NPVpos_option2_{min_percentage}_leastcost.csv",
+         max_height=1.1, max_width=1.8, stepsize_height=0.01, stepsize_width=0.01, num_height=6,
+         num_width=6, product_thresholds={'notebooks': reversemeans_scaled['Notebook'],
                                           'monitors': reversemeans_scaled['Monitor'],
                                           'televisions': reversemeans_scaled['Television']})
 
     # Option 3: Each product should constitute at least a certain amount of the production
     print('RUN OPTION 3')
     threshold = 0.005
-    
+
     # Run baseline case
     main(Data_baseline, option=3,
-          output_path1=f"output/NPV_baseline_option3_{threshold}_fullgrid.csv",
-          product_thresholds=threshold)
-    
+         output_path1=f"output/NPV_baseline_option3_{threshold}_fullgrid.csv",
+         product_thresholds=threshold)
+
     # Run full grid (1.60-1.85 (0.05) x 1.00-1.55 (0.05))
     main(Data500, option=3,
-          output_path1=f"output/NPV_option3_{threshold}_fullgrid.csv",
-          output_path2=f"output/NPVmax_option3_{threshold}_fullgrid.csv",
-          output_path3=f"output/NPVmin_option3_{threshold}_fullgrid.csv",
-          output_path4=f"output/NPVpos_option3_{threshold}_fullgrid.csv",
-          product_thresholds=threshold)
-    
+         output_path1=f"output/NPV_option3_{threshold}_fullgrid.csv",
+         output_path2=f"output/NPVmax_option3_{threshold}_fullgrid.csv",
+         output_path3=f"output/NPVmin_option3_{threshold}_fullgrid.csv",
+         output_path4=f"output/NPVpos_option3_{threshold}_fullgrid.csv",
+         product_thresholds=threshold)
