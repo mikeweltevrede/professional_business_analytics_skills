@@ -9,7 +9,7 @@ from NPVFunction import NPV_SAA
 
 
 def main(Data, output_path1=None, output_path2=None, output_path3=None, output_path4=None,
-         max_height=None, max_width=None, num_height=12, num_width=18, stepsize_width=0.05,
+         max_height=None, max_width=None, num_height=12, num_width=6, stepsize_width=0.05,
          stepsize_height=0.05, option=1, product_thresholds=None, verbose=False):
 
     if max_width is None:
@@ -21,27 +21,40 @@ def main(Data, output_path1=None, output_path2=None, output_path3=None, output_p
     heights = [max_height-stepsize_height*i for i in range(num_height)]
 
     NPV = pd.DataFrame(np.zeros((num_height, num_width)), index=heights, columns=widths)
-    NPVmax = NPV.copy()
-    NPVmin = NPV.copy()
-    NPVpos = NPV.copy()
+    
+    if output_path2 is not None:
+        NPVmax = NPV.copy()
+    if output_path3 is not None:
+        NPVmin = NPV.copy()
+    if output_path4 is not None:
+        NPVpos = NPV.copy()
 
     for h in tqdm(range(num_height)):
         for w in tqdm(range(num_width)):
             NPV_ = NPV_SAA(Data, h=heights[h], w=widths[w], option=option,
                            product_thresholds=product_thresholds, verbose=verbose)
             NPV.values[h, w] = NPV_['Average NPV']
-            NPVmax.values[h, w] = NPV_['NPVmax']
-            NPVmin.values[h, w] = NPV_['NPVmin']
-            NPVpos.values[h, w] = 1-(NPV_['#NegativeScenarios']/len(Data))
+            if output_path2 is not None:
+                NPVmax.values[h, w] = NPV_['NPVmax']
+            if output_path3 is not None:
+                NPVmin.values[h, w] = NPV_['NPVmin']
+            if output_path4 is not None:
+                NPVpos.values[h, w] = 1-(NPV_['#NegativeScenarios']/len(Data))
     
     if output_path1 is not None:
         NPV.to_csv(output_path1)
+    if output_path2 is not None:
         NPVmax.to_csv(output_path2)
+    if output_path3 is not None: 
         NPVmin.to_csv(output_path3)
+    if output_path4 is not None:
         NPVpos.to_csv(output_path4)
 
 
 if __name__ == "__main__":  # This means that running this script will run the code below
+
+    # Run baseline case
+    Data_baseline = {0: generateData("data/DataPBAS.xlsx", probability={'all': [0, 1, 0]})}
 
     # Create data
     seed = 42
