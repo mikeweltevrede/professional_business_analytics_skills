@@ -152,7 +152,7 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
             m.addConstr(COS2[s, t] == quicksum(
                 Data[s]['SubstrateCost'].iloc[0, t]*(w*h)*x[p, t] for p in range(Products)),
                 name='Cost of Sales without depreciation')
-        
+
         # Continue for loop over s for variables
         CCC[s] = (Data[s]['DIO']+Data[s]['DSO']-Data[s]['DPO'])/365
         DWC[s, 0] = WC[s, 0]
@@ -165,21 +165,21 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
 
         for t in range(1, Time):
             DWC[s, t] = WC[s, t]-WC[s, t-1]
-            
+
         for t in range(Time):
             NCF[s, t] = (NI[s, t] + Data[s]['Depreciation'].iloc[0, t] - DWC[s, t] -
                          Data[s]['InvestmentCost'].iloc[0, t])
 
             NPV[s, t] = NCF[s, t]/((1+Data[s]['WACC'])**t)
 
-        
     for s in range(Scenarios):
         DWC[s, Time] = -WC[s, Time-1]
         NCF[s, Time] = -DWC[s, Time]
         NPV[s, Time] = NCF[s, Time]/((1+Data[s]['WACC'])**Time)
         NPVperScenario[s] = quicksum(NPV[s, t] for t in range(Time+1))
     # OBJECTIVE
-    obj = (1/Scenarios)*quicksum(quicksum(NPV[s, t] for s in range(Scenarios)) for t in range(Time+1))
+    obj = (1/Scenarios)*quicksum(quicksum(NPV[s, t]
+                                          for s in range(Scenarios)) for t in range(Time+1))
     m.setObjective(obj, gb.GRB.MAXIMIZE)
 
     # RUN OPTIMIZATION
@@ -209,42 +209,41 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
         TotalProduction.iloc[0, t] = int(quicksum(x[p, t].x for p in range(Products)).getValue())
 
     Production = pd.concat([ProductProduction, TotalProduction])
-    ## Number of products Sold (Average over scenarios dus kan non integer zijn!!)   
+    # Number of products Sold (Average over scenarios dus kan non integer zijn!!)
     NumberofProducts = pd.DataFrame(np.zeros((Products, Time)), index=Data[0]['Yield']['Format'],
-                                     columns=Data[0]['InvestmentCost'].columns)
+                                    columns=Data[0]['InvestmentCost'].columns)
     PriceProducts = pd.DataFrame(np.zeros((Products, Time)), index=Data[0]['Yield']['Format'],
-                                     columns=Data[0]['InvestmentCost'].columns)
-    
+                                 columns=Data[0]['InvestmentCost'].columns)
+
     for p in range(Products):
         for t in range(Time):
-            NumberofProducts.iloc[p, t] = (Production.iloc[p, t]* (1/Scenarios)*
-                                 sum(PoS[s][p]['num_products'] for s in range(Scenarios)) * 
-                                 (1/Scenarios)*sum(Data[s]['Yield'].iloc[p, t+4] 
-                                 for s in range(Scenarios)))
-            PriceProducts.iloc[p, t] = ((1/Scenarios)*sum(Data[s]['ProductPrice'].iloc[p, t+2] 
-                                        for s in range(Scenarios)))
-    
-    ###Glass loss
+            NumberofProducts.iloc[p, t] = (Production.iloc[p, t] * (1/Scenarios) *
+                                           sum(PoS[s][p]['num_products'] for s in range(Scenarios)) *
+                                           (1/Scenarios)*sum(Data[s]['Yield'].iloc[p, t+4]
+                                                             for s in range(Scenarios)))
+            PriceProducts.iloc[p, t] = ((1/Scenarios)*sum(Data[s]['ProductPrice'].iloc[p, t+2]
+                                                          for s in range(Scenarios)))
+
+    # Glass loss
     AverageProductWidth = [(1/Scenarios)*sum(Data[s]['ProductSize'].loc[p, 'Width (m)']
-                            for s in range(Scenarios)) for p in range(Products)]
+                                             for s in range(Scenarios)) for p in range(Products)]
     AverageProductHeight = [(1/Scenarios)*sum(Data[s]['ProductSize'].loc[p, 'Height (m)']
-                            for s in range(Scenarios)) for p in range(Products)]        
+                                              for s in range(Scenarios)) for p in range(Products)]
 
-    GlassLossPr = [((w*h)-(1/Scenarios)*sum(PoS[s][p]['num_products'] 
-                    for s in range(Scenarios))*AverageProductWidth[p]*AverageProductHeight[p])/(w*h) 
-                        for p in range(Products)]
+    GlassLossPr = [((w*h)-(1/Scenarios)*sum(PoS[s][p]['num_products']
+                                            for s in range(Scenarios))*AverageProductWidth[p]*AverageProductHeight[p])/(w*h)
+                   for p in range(Products)]
     TotalGlassLoss = (np.zeros((Time)))
-    for t in range(2,Time):
-        TotalGlassLoss[t] = sum(GlassLossPr[p]*x[p, t].x for p in range(Products))/TotalProduction.iloc[0, t]
+    for t in range(2, Time):
+        TotalGlassLoss[t] = sum(
+            GlassLossPr[p]*x[p, t].x for p in range(Products))/TotalProduction.iloc[0, t]
 
-                                
-    
     # ELEMENTS PROFIT AND LOSS STATEMENT
     PL = collections.defaultdict(dict)
     for t in range(Time):
-#        PL[t]['ProductPrice'] = [((1/Scenarios)*quicksum(Data[s]['ProductPrice'].iloc[p, t+2]
-#                                                         for s in range(Scenarios))).getValue()
-#                                 for p in range(Products)]  # Price per product
+        #        PL[t]['ProductPrice'] = [((1/Scenarios)*quicksum(Data[s]['ProductPrice'].iloc[p, t+2]
+        #                                                         for s in range(Scenarios))).getValue()
+        #                                 for p in range(Products)]  # Price per product
         PL[t]['PercentageGlassLoss'] = TotalGlassLoss[t]
 #        PL[t]['NumberofProductsSold'] = [NumberofProducts.iloc[p, t] for p in range(Products)]
         PL[t]['SubstrateCost'] = ((1/Scenarios)*sum(Data[s]['SubstrateCost'].iloc[0, t]*(w*h)
@@ -286,7 +285,7 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
                                                for s in range(Scenarios))).getValue()
         PL[t]['DWC'] = (1/Scenarios)*(quicksum(DWC[s, t] for s in range(Scenarios))).getValue()
 
-#    pd.DataFrame(PL).to_csv("PL/PL exclusief #Products and Price.csv")              
+#    pd.DataFrame(PL).to_csv("PL/PL exclusief #Products and Price.csv")
     return {'Average NPV': obj.getValue(),
             'NPVmax': NPVmax,
             'NPVmin': NPVmin,
