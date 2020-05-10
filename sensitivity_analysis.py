@@ -2,6 +2,7 @@ import pickle
 import os
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 import seaborn as sns; sns.set()
@@ -93,9 +94,17 @@ npvs = NPV_SAA(Data1000, h=height, w=width, option=option, product_thresholds=pr
                verbose=verbose)['NPVs']
 
 # TODO: Change font to Proxima Nova?
-g = sns.distplot(npvs, color="#4ba173")
-plt.axvline(0, color="#ff5252", ax=g)
-ax.set(xlabel='Net Present Value')
-frame = plt.gca() 
-frame.axes.get_yaxis().set_visible(False)
+# g = sns.distplot(npvs, color="#4ba173")
+# plt.axvline(0, color="#ff5252")
+# ax.set(xlabel='Net Present Value')
+# frame = plt.gca() 
+# frame.axes.get_yaxis().set_visible(False)
+# plt.show()
+
+g = sns.distplot(npvs, color="#4ba173", hist=False)
+plt.axvline(0, color="#ff5252")
+ax = plt.gca()
+plt.locator_params(axis='x', nbins=3)
+xlabels = ['$'+  '{:,.0f}'.format(x) + 'M' for x in g.get_xticks()/1000000]
+g.set_xticklabels(xlabels)
 plt.show()
