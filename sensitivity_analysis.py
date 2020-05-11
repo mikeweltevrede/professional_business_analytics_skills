@@ -5,7 +5,7 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns; sns.set()
+import seaborn as sns; sns.set_style("whitegrid", rc={'grid.color': '.9'})
 
 from DataFunction import generateData
 from NPVFunction import NPV_SAA
@@ -90,8 +90,9 @@ else:
     with open(data1000_path, "wb") as data:
         pickle.dump(Data1000, data)
 
-npvs = NPV_SAA(Data1000, h=height, w=width, option=option, product_thresholds=product_thresholds,
-               verbose=verbose)['NPVs']
+results = NPV_SAA(Data1000, h=height, w=width, option=option, product_thresholds=product_thresholds,
+               verbose=verbose)
+npvs = results['NPVs']
 npvs_bad = NPV_SAA(Data1000, h=1.85, w=1.06, option=option, product_thresholds=product_thresholds,
                    verbose=verbose)['NPVs']
 
@@ -102,9 +103,11 @@ ax.axvline(np.mean(npvs), color="#ff5252", label = "Average NPV")
 ax.set_xticklabels(['{:,.0f}'.format(x) for x in ax.get_xticks()/1e9])
 ax.set_yticklabels([int(round(y*1e10)) for y in ax.get_yticks()])
 ax.set(ylim=(0, 6.5e-10))
-plt.xlabel("Net Present Value (billions $) for 1000 possible scenarios", fontname="Proxima Nova")
-plt.ylabel("Probability of occuring ($10^{-7}$%)", fontname="Proxima Nova")
+plt.xlabel("Net Present Value (billions $) for 1000 possible scenarios")
+plt.ylabel("Probability of occuring ($10^{-7}$%)")
 ax.legend(loc='upper left')
+sns.despine()
+plt.tight_layout()
 plt.savefig("output/distplot_optimal.png", dpi=300)
 plt.show()
 
@@ -115,8 +118,26 @@ ax.axvline(np.mean(npvs_bad), color="#ff5252", label = "Average NPV")
 ax.set_xticklabels(['{:,.1f}'.format(x) for x in ax.get_xticks()/1e9])
 ax.set_yticklabels([int(round(y*1e10)) for y in ax.get_yticks()])
 ax.set(ylim=(0, 9e-10))
-plt.xlabel("Net Present Value (billions \$) for 1000 possible scenarios", **font)
-plt.ylabel("Probability of occuring ($10^{-7}$%)", **font)
+plt.xlabel("Net Present Value (billions \$) for 1000 possible scenarios")
+plt.ylabel("Probability of occuring ($10^{-7}$%)")
 ax.legend(loc='upper left')
+sns.despine()
+plt.tight_layout()
 plt.savefig("output/distplot_bad.png", dpi=300)
 plt.show()
+
+# Determine NPVs for the other options
+results_1 = NPV_SAA(Data1000, h=height, w=width, option=1, verbose=verbose)
+results_3 = NPV_SAA(Data1000, h=height, w=width, option=3, product_thresholds=0.005,
+                 verbose=verbose)
+
+pos_npvs_1 = [npv for npv in results_1['NPVs'] if npv > 0]
+pos_npvs_2 = [npv for npv in npvs if npv > 0]
+pos_npvs_3 = [npv for npv in results_3['NPVs'] if npv > 0]
+
+print(f"Mean NPV: {np.mean(pos_npvs_1)}, "
+      f"Probability of negative NPV: {results_1['#NegativeScenarios']/1000}")
+print(f"Mean NPV: {np.mean(pos_npvs_2)}, "
+      f"Probability of negative NPV: {results['#NegativeScenarios']/1000}")
+print(f"Mean NPV: {np.mean(pos_npvs_3)}, "
+      f"Probability of negative NPV: {results_3['#NegativeScenarios']/1000}")
