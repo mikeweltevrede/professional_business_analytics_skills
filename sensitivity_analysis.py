@@ -1,10 +1,10 @@
 import pickle
 import os
 
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
+from tqdm import tqdm
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import seaborn as sns; sns.set()
 
 from DataFunction import generateData
@@ -89,22 +89,34 @@ else:
 
     with open(data1000_path, "wb") as data:
         pickle.dump(Data1000, data)
-        
+
 npvs = NPV_SAA(Data1000, h=height, w=width, option=option, product_thresholds=product_thresholds,
                verbose=verbose)['NPVs']
+npvs_bad = NPV_SAA(Data1000, h=1.85, w=1.06, option=option, product_thresholds=product_thresholds,
+                   verbose=verbose)['NPVs']
 
-# TODO: Change font to Proxima Nova?
-# g = sns.distplot(npvs, color="#4ba173")
-# plt.axvline(0, color="#ff5252")
-# ax.set(xlabel='Net Present Value')
-# frame = plt.gca() 
-# frame.axes.get_yaxis().set_visible(False)
-# plt.show()
+# "Optimal" plot
+ax = sns.distplot(npvs, color="#4ba173", label = "Distribution of the NPV")
+ax.axvline(0, color='black', alpha=0.5, label = "NPV = 0")
+ax.axvline(np.mean(npvs), color="#ff5252", label = "Average NPV")
+ax.set_xticklabels(['{:,.0f}'.format(x) for x in ax.get_xticks()/1e9])
+ax.set_yticklabels([int(round(y*1e10)) for y in ax.get_yticks()])
+ax.set(ylim=(0, 6.5e-10))
+plt.xlabel("Net Present Value (billions $) for 1000 possible scenarios", fontname="Proxima Nova")
+plt.ylabel("Probability of occuring ($10^{-7}$%)", fontname="Proxima Nova")
+ax.legend(loc='upper left')
+plt.savefig("output/distplot_optimal.png", dpi=300)
+plt.show()
 
-g = sns.distplot(npvs, color="#4ba173", hist=False)
-plt.axvline(0, color="#ff5252")
-ax = plt.gca()
-plt.locator_params(axis='x', nbins=3)
-xlabels = ['$'+  '{:,.0f}'.format(x) + 'M' for x in g.get_xticks()/1000000]
-g.set_xticklabels(xlabels)
+# "Bad" plot
+ax = sns.distplot(npvs_bad, color="#4ba173", label = "Distribution of the NPV")
+ax.axvline(0, color='black', alpha=0.5, label = "NPV = 0")
+ax.axvline(np.mean(npvs_bad), color="#ff5252", label = "Average NPV")
+ax.set_xticklabels(['{:,.1f}'.format(x) for x in ax.get_xticks()/1e9])
+ax.set_yticklabels([int(round(y*1e10)) for y in ax.get_yticks()])
+ax.set(ylim=(0, 9e-10))
+plt.xlabel("Net Present Value (billions \$) for 1000 possible scenarios", **font)
+plt.ylabel("Probability of occuring ($10^{-7}$%)", **font)
+ax.legend(loc='upper left')
+plt.savefig("output/distplot_bad.png", dpi=300)
 plt.show()
