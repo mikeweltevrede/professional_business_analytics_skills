@@ -190,10 +190,7 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
     NPVmin = min(NPVs)
 
     # Count negative scenarios
-    NegativeScenario = 0
-    for s in range(Scenarios):
-        if NPVperScenario[s].getValue() < 0:
-            NegativeScenario = NegativeScenario + 1
+    NegativeScenario = sum(1 for npv in NPVs if npv < 0)
 
     # Production Table
     ProductProduction = pd.DataFrame(np.zeros((Products, Time)), index=Data[0]['Yield']['Format'],
