@@ -291,4 +291,5 @@ def NPV_SAA(Data, h, w, option=1, product_thresholds=None, verbose=True):
             'Height': h,
             '#NegativeScenarios': NegativeScenario,
             'PL': PL,
-            'Production': Production}
+            'Production': Production,
+            'POS': PoS}
