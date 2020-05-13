@@ -72,7 +72,7 @@ if __name__ == "__main__":  # This means that running this script will run the c
         else:
             # This file needs to be created
             random.seed(seed)
-            keys = random.sample(list(Data1000.keys()), num_scenarios//2)
+            keys = random.sample(list(Data1000.keys()), 500)
             Data500 = {i: Data1000[keys[i]] for i in range(len(keys))}
 
             with open(data500_path, "wb") as data:
@@ -99,16 +99,21 @@ if __name__ == "__main__":  # This means that running this script will run the c
     # of 500 scenarios. For option 2, we zoom in on the most promising areas using a larger dataset
     # of 1000 scenarios.
 
-    # # Option 1: Maximise profit
-    # print('RUN OPTION 1')
+    # Option 1: Maximise profit
+    print('RUN OPTION 1')
 
-    # # Run full grid (1.60-1.85 (0.05) x 1.00-1.55 (0.05))
-    # main(Data_baseline, option=1, output_path1="output/NPV_baseline_option1_fullgrid.csv")
-    # main(Data500, option=1,
-    #      output_path1="output/NPV_option1_fullgrid.csv",
-    #      output_path2="output/NPVmax_option1_fullgrid.csv",
-    #      output_path3="output/NPVmin_option1_fullgrid.csv",
-    #      output_path4="output/NPVpos_option1_fullgrid.csv")
+    # Run full grid (1.60-1.85 (0.05) x 1.00-1.55 (0.05))
+    main(Data_baseline, option=1, output_path1="output/NPV_baseline_option1_fullgrid.csv")
+    main(Data500, option=1,
+          output_path1="output/NPV_option1_fullgrid.csv",
+          output_path2="output/NPVmax_option1_fullgrid.csv",
+          output_path3="output/NPVmin_option1_fullgrid.csv",
+          output_path4="output/NPVpos_option1_fullgrid.csv")
+
+    # Run baseline case (zoomed in)
+    main(Data_baseline, option=1, output_path1=f"output/NPV_baseline_option1_zoomedin.csv",
+         max_height=1.15, max_width=1.85, num_height=11, num_width=6, stepsize_height=0.01,
+         stepsize_width=0.01)
 
     # Option 2: Each market should constitute at least a certain amount of the production
     print('RUN OPTION 2')
@@ -122,69 +127,87 @@ if __name__ == "__main__":  # This means that running this script will run the c
     # Scale such that minimum is min_percentage%
     means_scaled = means/(min(means)/min_percentage)
 
-    # # Run baseline case
-    # main(Data_baseline, option=2,
-    #      output_path1=f"output/NPV_baseline_option2_{min_percentage}_fullgrid.csv",
-    #      product_thresholds={'notebooks': means_scaled['Notebook'],
-    #                          'monitors': means_scaled['Monitor'],
-    #                          'televisions': means_scaled['Television']})
+    # Run full grid (1.60-1.85 (0.05) x 1.00-1.55 (0.05))
+    main(Data_baseline, option=2,
+          output_path1="output/NPV_baseline_option2_{min_percentage}_fullgrid.csv",
+          product_thresholds={'notebooks': means_scaled['Notebook'],
+                              'monitors': means_scaled['Monitor'],
+                              'televisions': means_scaled['Television']})
 
-    # # Run full grid (1.60-1.85 (0.05) x 1.00-1.55 (0.05))
-    # main(Data500, option=2,
-    #      output_path1=f"output/NPV_option2_{min_percentage}_fullgrid.csv",
-    #      output_path2=f"output/NPVmax_option2_{min_percentage}_fullgrid.csv",
-    #      output_path3=f"output/NPVmin_option2_{min_percentage}_fullgrid.csv",
-    #      output_path4=f"output/NPVpos_option2_{min_percentage}_fullgrid.csv",
-    #      product_thresholds={'notebooks': means_scaled['Notebook'],
-    #                          'monitors': means_scaled['Monitor'],
-    #                          'televisions': means_scaled['Television']})
+    # Run baseline case (zoomed in)
+    main(Data_baseline, option=2,
+         output_path1=f"output/NPV_baseline_option2_{min_percentage}_zoomedin.csv",
+         product_thresholds={'notebooks': means_scaled['Notebook'],
+                             'monitors': means_scaled['Monitor'],
+                             'televisions': means_scaled['Television']},
+         max_height=1.15, max_width=1.85, num_height=11, num_width=6, stepsize_height=0.01,
+         stepsize_width=0.01)
 
-    # Run zoomed-in on most profitable for more scenarios
+    # Run full grid (1.60-1.85 (0.05) x 1.00-1.55 (0.05))
+    main(Data500, option=2,
+          output_path1=f"output/NPV_option2_{min_percentage}_fullgrid.csv",
+          output_path2=f"output/NPVmax_option2_{min_percentage}_fullgrid.csv",
+          output_path3=f"output/NPVmin_option2_{min_percentage}_fullgrid.csv",
+          output_path4=f"output/NPVpos_option2_{min_percentage}_fullgrid.csv",
+          product_thresholds={'notebooks': means_scaled['Notebook'],
+                              'monitors': means_scaled['Monitor'],
+                              'televisions': means_scaled['Television']})
+
+    # Run zoomed-in on most profitable case (highest maximum NPV) for more scenarios. Do note that
+    # the decision to zoom in on this area is effectively made on only one scenario.
     main(Data1000, option=2,
-         output_path1=f"output/NPV_option2_{min_percentage}_mostprofit.csv",
-         output_path2=f"output/NPVmax_option2_{min_percentage}_mostprofit.csv",
-         output_path3=f"output/NPVmin_option2_{min_percentage}_mostprofit.csv",
-         output_path4=f"output/NPVpos_option2_{min_percentage}_mostprofit.csv",
-         max_height=1.55, max_width=1.85, stepsize_height=0.01, stepsize_width=0.01, num_height=5,
-         num_width=5, product_thresholds={'notebooks': means_scaled['Notebook'],
+          output_path1=f"output/NPV_option2_{min_percentage}_mostprofit.csv",
+          output_path2=f"output/NPVmax_option2_{min_percentage}_mostprofit.csv",
+          output_path3=f"output/NPVmin_option2_{min_percentage}_mostprofit.csv",
+          output_path4=f"output/NPVpos_option2_{min_percentage}_mostprofit.csv",
+          max_height=1.55, max_width=1.85, stepsize_height=0.01, stepsize_width=0.01, num_height=5,
+          num_width=5, product_thresholds={'notebooks': means_scaled['Notebook'],
                                           'monitors': means_scaled['Monitor'],
                                           'televisions': means_scaled['Television']})
 
-    # Run zoomed-in on 2nd most profitable for more scenarios
+    # Run zoomed-in on highest average NPV for more scenarios. Note that this also had the highest
+    # probability of a positive NPV.
     main(Data1000, option=2,
-         output_path1=f"output/NPV_option2_{min_percentage}_2ndmostprofit.csv",
-         output_path2=f"output/NPVmax_option2_{min_percentage}_2ndmostprofit.csv",
-         output_path3=f"output/NPVmin_option2_{min_percentage}_2ndmostprofit.csv",
-         output_path4=f"output/NPVpos_option2_{min_percentage}_2ndmostprofit.csv",
-         max_height=1.15, max_width=1.85, stepsize_height=0.01, stepsize_width=0.01, num_height=11,
-         num_width=5, product_thresholds={'notebooks': means_scaled['Notebook'],
+          output_path1=f"output/NPV_option2_{min_percentage}_2ndmostprofit.csv",
+          output_path2=f"output/NPVmax_option2_{min_percentage}_2ndmostprofit.csv",
+          output_path3=f"output/NPVmin_option2_{min_percentage}_2ndmostprofit.csv",
+          output_path4=f"output/NPVpos_option2_{min_percentage}_2ndmostprofit.csv",
+          max_height=1.15, max_width=1.85, stepsize_height=0.01, stepsize_width=0.01, num_height=11,
+          num_width=5, product_thresholds={'notebooks': means_scaled['Notebook'],
                                           'monitors': means_scaled['Monitor'],
                                           'televisions': means_scaled['Television']})
 
-    # Run zoomed-in on least costly () for more scenarios
+    # Run zoomed-in on the least costly case (highest minimum NPV) for more scenarios. Do note that
+    # the decision to zoom in on this area is effectively made on only one scenario.
     main(Data1000, option=2,
-         output_path1=f"output/NPV_option2_{min_percentage}_leastcost.csv",
-         output_path2=f"output/NPVmax_option2_{min_percentage}_leastcost.csv",
-         output_path3=f"output/NPVmin_option2_{min_percentage}_leastcost.csv",
-         output_path4=f"output/NPVpos_option2_{min_percentage}_leastcost.csv",
-         max_height=1.1, max_width=1.8, stepsize_height=0.01, stepsize_width=0.01, num_height=7,
-         num_width=7, product_thresholds={'notebooks': means_scaled['Notebook'],
+          output_path1=f"output/NPV_option2_{min_percentage}_leastcost.csv",
+          output_path2=f"output/NPVmax_option2_{min_percentage}_leastcost.csv",
+          output_path3=f"output/NPVmin_option2_{min_percentage}_leastcost.csv",
+          output_path4=f"output/NPVpos_option2_{min_percentage}_leastcost.csv",
+          max_height=1.1, max_width=1.8, stepsize_height=0.01, stepsize_width=0.01, num_height=7,
+          num_width=7, product_thresholds={'notebooks': means_scaled['Notebook'],
                                           'monitors': means_scaled['Monitor'],
                                           'televisions': means_scaled['Television']})
 
-    # # Option 3: Each product should constitute at least a certain amount of the production
-    # print('RUN OPTION 3')
-    # threshold = 0.005
+    # Option 3: Each product should constitute at least a certain amount of the production
+    print('RUN OPTION 3')
+    threshold = 0.005
 
-    # # Run baseline case
-    # main(Data_baseline, option=3,
-    #      output_path1=f"output/NPV_baseline_option3_{threshold}_fullgrid.csv",
-    #      product_thresholds=threshold)
+    # Run baseline case
+    main(Data_baseline, option=3,
+          output_path1=f"output/NPV_baseline_option3_{threshold}_fullgrid.csv",
+          product_thresholds=threshold)
 
-    # # Run full grid (1.60-1.85 (0.05) x 1.00-1.55 (0.05))
-    # main(Data500, option=3,
-    #      output_path1=f"output/NPV_option3_{threshold}_fullgrid.csv",
-    #      output_path2=f"output/NPVmax_option3_{threshold}_fullgrid.csv",
-    #      output_path3=f"output/NPVmin_option3_{threshold}_fullgrid.csv",
-    #      output_path4=f"output/NPVpos_option3_{threshold}_fullgrid.csv",
-    #      product_thresholds=threshold)
+    # Run baseline case (zoomed in)
+    main(Data_baseline, option=3,
+         output_path1=f"output/NPV_baseline_option3_{threshold}_zoomedin.csv",
+         product_thresholds=threshold, max_height=1.15, max_width=1.85, num_height=11, num_width=6,
+         stepsize_height=0.01, stepsize_width=0.01)
+
+    # Run full grid (1.60-1.85 (0.05) x 1.00-1.55 (0.05))
+    main(Data500, option=3,
+          output_path1=f"output/NPV_option3_{threshold}_fullgrid.csv",
+          output_path2=f"output/NPVmax_option3_{threshold}_fullgrid.csv",
+          output_path3=f"output/NPVmin_option3_{threshold}_fullgrid.csv",
+          output_path4=f"output/NPVpos_option3_{threshold}_fullgrid.csv",
+          product_thresholds=threshold)
