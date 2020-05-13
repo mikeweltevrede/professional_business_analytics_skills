@@ -52,8 +52,12 @@ results_1000 = NPV_SAA(Data1000, h=height, w=width, option=option,
 
 # Make histogram of NPVs
 npvs = results_1000['NPVs']
-npvs_bad = NPV_SAA(Data1000, h=1.85, w=1.06, option=option, product_thresholds=product_thresholds,
-                   verbose=verbose)['NPVs']
+results_bad = NPV_SAA(Data1000, h=1.85, w=1.06, option=option,
+                      product_thresholds=product_thresholds, verbose=verbose)
+results_baseline_bad = NPV_SAA(Data_baseline, h=1.85, w=1.06, option=option,
+                               product_thresholds=product_thresholds, verbose=verbose)
+npvs_bad = results_bad['NPVs']
+baseline_bad = results_baseline_bad['Average NPV']
 
 # "Optimal" plot
 ax = sns.distplot(npvs, color="#4ba173", label = "Distribution of the NPV")
@@ -75,7 +79,7 @@ plt.show()
 ax = sns.distplot(npvs_bad, color="#4ba173", label = "Distribution of the NPV")
 ax.axvline(0, color='black', alpha=0.5, label = "NPV = 0", linestyle="--")
 ax.axvline(np.mean(npvs_bad), color="#ff5252", label = "Average NPV", linestyle="--")
-ax.axvline(baseline_NPV, color="#3d85c6", label = "Baseline NPV", linestyle="--")
+ax.axvline(baseline_bad, color="#3d85c6", label = "Baseline NPV", linestyle="--")
 ax.set_xticklabels(['{:,.1f}'.format(x) for x in ax.get_xticks()/1e9])
 ax.set_yticklabels([int(round(y*1e10)) for y in ax.get_yticks()])
 ax.set(ylim=(0, 9e-10))
