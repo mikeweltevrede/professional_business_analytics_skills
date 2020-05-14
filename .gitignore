@@ -1,6 +1,12 @@
-data/
+__pycache__
+.ipynb_checkpoints
+.vscode
+
+ignore/
 Logo/
 Project Plan/
 Scoping & Acquisition/
 Slides/
 
+*.ipynb
+gurobi.log
